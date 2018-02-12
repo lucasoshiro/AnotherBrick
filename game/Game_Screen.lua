@@ -32,6 +32,7 @@ function randomPositions()
 
    positions = {[1] = 0, [BrickCol + 1] = W}
    aux = {[0] = 1, [W] = BrickCol + 1}
+   
    for k = 2, BrickCol do
       local x = math.floor(math.floor(math.random() * 19 + 1) * W / 20)
       while aux[x] do
@@ -58,6 +59,39 @@ function limitBallVelocity(minV, maxV)
       local k = maxV / v
       objects.ball.fixture:getBody():setLinearVelocity(k * vx, k * vy)
    end
+end
+
+function randomHardness()
+   local k = math.random()
+   
+   if mode == "easy" then
+      if k < 4/5 then return 0
+      else            return 1
+      end
+
+   elseif mode == "medium" then
+      if     k < 6/10 then return 0
+      elseif k < 9/10 then return 1
+      else                 return 2
+      end
+
+   else
+      if     k < 1/10 then return 0
+      elseif k < 5/10 then return 1
+      else                 return 2
+      end
+   end
+end
+
+function randomPowerup()
+   local k = math.random()
+
+   if     k < 3 / (4 * BrickCol * BrickRow) then return 2
+   elseif k < 1/40                          then return 3
+   elseif k < 1/20                          then return 1
+   end
+   
+   return 0
 end
 
 function initWorld()
@@ -123,48 +157,21 @@ function initWorld()
          brickW = positions[j + 1] - positions[j]
          brickX = math.floor((positions[j + 1] + positions[j]) / 2)
 
-         objects.bricks[i][j] = {}
-         objects.bricks[i][j].body = love.physics.newBody(world, brickX, i*BrickH - BrickH/2)
-         objects.bricks[i][j].shape = love.physics.newRectangleShape(brickW - 2, BrickH - 2)
-         objects.bricks[i][j].fixture = love.physics.newFixture(objects.bricks[i][j].body,
-                                                                objects.bricks[i][j].shape)
+         local powerupType = randomPowerup()
 
-         local k = math.random()
-         local hardness = 0
-         local R = 0
-         local G = 0
-         local B = 0
-
-         objects.bricks[i][j].life = 0
-         objects.bricks[i][j].nitro = 0
-
-         if (mode == "easy") then
-            if k < 4/5 then
-               hardness = 0
-            else hardness = 1 end
-            objects.bricks[i][j].hardness = hardness
-         elseif (mode == "medium") then
-            if k < 6/10 then hardness = 0
-            elseif k < 9/10 then hardness = 1
-            else hardness = 2 end
-            objects.bricks[i][j].hardness = hardness
-         else
-            if k < 1/10 then hardness = 0
-            elseif k < 5/10 then hardness = 1
-            else hardness = 2 end
-            objects.bricks[i][j].hardness = hardness
-         end
-
-         if (math.random() < 1/20) then
-            objects.bricks[i][j].powerup = 1
-            objects.bricks[i][j].hardness = 0
-         elseif math.random() < 3 / (4 * BrickCol * BrickRow) then
-            objects.bricks[i][j].life = 1
-            objects.bricks[i][j].hardness = 0
-         elseif k < 1/40 then
-            objects.bricks[i][j].nitro = 500
-            objects.bricks[i][j].hardness = 0
-         end
+         objects.bricks[i][j] = {
+            body     = love.physics.newBody(world, brickX, i*BrickH - BrickH/2),
+            shape    = love.physics.newRectangleShape(brickW - 2, BrickH - 2),
+            powerup  = (powerupType == 1)  and 1   or 0,
+            life     = (powerupType == 2)  and 1   or 0,
+            nitro    = (powerupType == 3)  and 500 or 0,
+            hardness = (powerupType == -1) and 0   or randomHardness()
+         }
+         
+         objects.bricks[i][j].fixture =
+            love.physics.newFixture(objects.bricks[i][j].body,
+                                    objects.bricks[i][j].shape)
+         
       end
    end
 
@@ -311,15 +318,15 @@ function Game_Screen.draw ()
    suit:draw()
 
    if newLevel then
-     love.graphics.setColor (255, 255, 255, 255)
-     love.graphics.setFont (ifFontLarge)
-     love.graphics.printf ("Level " .. level, 0, H/2, W, "center")
-     return
+      love.graphics.setColor (255, 255, 255, 255)
+      love.graphics.setFont (ifFontLarge)
+      love.graphics.printf ("Level " .. level, 0, H/2, W, "center")
+      return
    end
 
    if gameIsPaused then
       love.graphics.setColor (255, 255, 255, 255)
-     love.graphics.setFont (ifFontSmall)
+      love.graphics.setFont (ifFontSmall)
       love.graphics.printf ("Paused", 0, H/2, W, "center")
    end
 
@@ -375,9 +382,9 @@ function Game_Screen.update (dt)
       if life.count < 0 then
          onGameOver()
       else
-        objects.ball.body:setPosition(W/3, H/2)
-        local px,py = objects.paddle.body:getPosition()
-        objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
+         objects.ball.body:setPosition(W/3, H/2)
+         local px,py = objects.paddle.body:getPosition()
+         objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
       end
    end
 
@@ -393,9 +400,9 @@ end
 
 function Game_Screen.touchpressed(id, x, y, dx, dy, pressure)
    if newLevel then
-     newLevel = not newLevel
-     local px,py = objects.paddle.body:getPosition ()
-     objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
+      newLevel = not newLevel
+      local px,py = objects.paddle.body:getPosition ()
+      objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
    end
    if gameIsPaused then return end
    objects.paddle.body:setLinearVelocity(0, 0)
@@ -412,7 +419,6 @@ function Game_Screen.touchpressed(id, x, y, dx, dy, pressure)
 end
 
 function Game_Screen.mousepressed(x, y, button)
-   print 'here'
    if newLevel then
       newLevel = not newLevel
       local px,py = objects.paddle.body:getPosition ()
@@ -587,10 +593,10 @@ end
 -- Chamada quando a bolinha cai na borda inferior
 function onGameOver()
    ScreenManager.changeTo("Game_Over_Screen",
-   {
-     mode = mode,
-     score = score.count,
-     level = level,
+                          {
+                             mode = mode,
+                             score = score.count,
+                             level = level,
    })
 end
 

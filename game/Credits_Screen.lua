@@ -33,7 +33,7 @@ function Credits_Screen.draw()
 end
 
 function Credits_Screen.back ()
-    ScreenManager.changeTo ("Menu_Screen")
+    ScreenManager.changeTo 'Menu_Screen'
 end
 
 return Credits_Screen
