@@ -29,7 +29,6 @@ function ScreenManager.changeTo (name, params)
    if cur_screen.load then cur_screen.load (params) end
    
    for i, method in ipairs(love_methods) do
-      print(method)
       if cur_screen[method] then
          love[method] = cur_screen[method]
       end
@@ -37,7 +36,7 @@ function ScreenManager.changeTo (name, params)
 
    if cur_screen.back then 
       function love.keypressed (key)
-         if key == "escape" then cur_screen.back () end
+         if key == "escape" then cur_screen.back() end
       end
    end
 end

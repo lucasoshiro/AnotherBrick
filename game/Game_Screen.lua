@@ -18,21 +18,11 @@ local inc = {[0] = 1, [1] = 5, [2] = 10}
 
 local numBricks
 
-local hardnessColor = {}
-hardnessColor[0] = {}
-hardnessColor[0].R = 166
-hardnessColor[0].G = 167
-hardnessColor[0].B = 170
-
-hardnessColor[1] = {}
-hardnessColor[1].R = 96
-hardnessColor[1].G = 136
-hardnessColor[1].B = 158
-
-hardnessColor[2] = {}
-hardnessColor[2].R = 40
-hardnessColor[2].G = 76
-hardnessColor[2].B = 115
+local hardnessColor = {
+   [0] = {R = 166, G = 167, B = 170},
+   [1] = {R = 96,  G = 136, B = 158},
+   [2] = {R = 40,  G = 76,  B = 115}
+}
 
 -- Devolve BrickCol + 1 posições que separam os tijolos em [0, W], sendo que o
 -- índice 1 é 0 e o último índice é W.
@@ -75,52 +65,53 @@ function initWorld()
    world:setCallbacks(beginContact, endContact)
    numBricks = (BrickCol - 2)*(BrickRow - 1)
 
-   objects = {}
+   objects = {
+      ceil = {
+         body = love.physics.newBody(world, W / 2, borderWidth / 2),
+         shape = love.physics.newRectangleShape(W, borderWidth),
+      },
 
-   objects.ceil = {}
-   objects.ceil.body = love.physics.newBody(world, W / 2, borderWidth / 2)
-   objects.ceil.shape = love.physics.newRectangleShape(W, borderWidth)
-   objects.ceil.fixture = love.physics.newFixture(objects.ceil.body,
-                                                  objects.ceil.shape)
+      leftWall = {
+         body = love.physics.newBody(world, borderWidth / 2, H / 2),
+         shape = love.physics.newRectangleShape(borderWidth, H),
+      },
 
-   objects.leftWall = {}
-   objects.leftWall.body = love.physics.newBody(world, borderWidth / 2, H / 2)
-   objects.leftWall.shape = love.physics.newRectangleShape(borderWidth, H)
-   objects.leftWall.fixture = love.physics.newFixture(objects.leftWall.body,
-                                                      objects.leftWall.shape)
+      rightWall = {
+         body = love.physics.newBody(world, W - borderWidth / 2, H / 2),
+         shape = love.physics.newRectangleShape(borderWidth, H),
+      },
 
-   objects.rightWall = {}
-   objects.rightWall.body = love.physics.newBody(world, W - borderWidth / 2, H / 2)
-   objects.rightWall.shape = love.physics.newRectangleShape(borderWidth, H)
-   objects.rightWall.fixture = love.physics.newFixture(objects.rightWall.body,
-                                                       objects.rightWall.shape)
+      ball = {
+         body = love.physics.newBody(world, W/3, H/2, "dynamic"),
+         shape = love.physics.newCircleShape(W / 30),
+         nitro = 0,
+      },
 
-   objects.ball = {}
-   objects.ball.body = love.physics.newBody(world, W/3, H/2, "dynamic")
-   objects.ball.shape = love.physics.newCircleShape(W / 30)
-   objects.ball.fixture = love.physics.newFixture(objects.ball.body,
-                                                  objects.ball.shape)
-   objects.ball.nitro = 0
-   objects.ball.body:setLinearVelocity(0, 0)
+      paddle = {
+         body = love.physics.newBody(world, W/2, H - W/10, "dynamic"),
+         shape = love.physics.newCircleShape(W / 10),
+         timer = -1,
+      }
+   }
 
-   objects.paddle = {}
-   objects.paddle.body = love.physics.newBody(world, W/2, H - W/10, "dynamic")
-   objects.paddle.shape = love.physics.newCircleShape(W / 10)
-   objects.paddle.fixture = love.physics.newFixture(objects.paddle.body,
-                                                    objects.paddle.shape)
-   objects.paddle.timer = -1
-
-   breaks = {}
-   breaks.elements = {}
-   breaks.count = 0
-   breaks.insert = function (x)
-      breaks.elements[#breaks.elements + 1] = x
---      breaks.count = breaks.count + 1
+   for objname, object in pairs(objects) do
+      object.fixture = love.physics.newFixture(object.body, object.shape)
    end
 
-   breaks.remove = function (i)
-      table.remove(breaks.elements, i)
-   end
+   objects.ball.body:setLinearVelocity(0,0)
+
+   breaks = {
+      elements = {},
+      count = 0,
+      
+      insert = function (x)
+         breaks.elements[#breaks.elements + 1] = x
+      end,
+
+      remove = function (i)
+         table.remove(breaks.elements, i)
+      end,
+   }
 
    objects.bricks = {}
    for i = 2, BrickRow do
@@ -560,6 +551,10 @@ function endContact(a, b, coll)
             ballFixture:getBody():setLinearVelocity(vx, (vy / math.abs(vy) * 0.15*W))
          end
       end
+
+      -- if otherFixture == objects.paddle.fixture then
+      --    objects.paddle.body:setLinearVelocity(0, 0)
+      -- end
 
       local diag = math.sqrt (W*W + H*H)
       if objects.ball.nitro > 0 then limitBallVelocity(diag*1.3, diag*1.3)
