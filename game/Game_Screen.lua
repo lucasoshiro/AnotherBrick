@@ -177,38 +177,46 @@ function Game_Screen.load (params)
    mode = params
 
    gameTime = 0
-   score = {}
-   score.count = 0
-   score.draw = function ()
-      love.graphics.setColor(252, 210, 9)
-      love.graphics.setFont (ifFontSmall)
-      love.graphics.print('Score', H/200 + W/22, H/200)
-      love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
-   end
-   score.increment = function (hardness)
-      score.count = score.count + inc[hardness]
-   end
+   
+   score = {
+      count = 0,
+      draw = function ()
+         love.graphics.setColor(252, 210, 9)
+         love.graphics.setFont (ifFontSmall)
+         love.graphics.print('Score', H/200 + W/22, H/200)
+         love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
+      end,
+      
+      increment = function (hardness)
+         score.count = score.count + inc[hardness]
+      end,
+   }
+   
    level = 1
 
    gameIsPaused = false
-   life = {}
-   life.count = 3
-   life.draw = function ()
-      love.graphics.setColor(119, 170, 112)
-      for i = 1, life.count do
-         love.graphics.setColor(255, 255, 255, 255)
-         love.graphics.draw(heartPic,
-                            H/200 + i * W/22,
-                            H / 200 + W / 200 + 5 * W/22,
-                            0,
-                            W / (25 * 400),
-                            W / (25 * 400))
+   
+   life = {
+      count = 3,
+      draw = function ()
+         love.graphics.setColor(119, 170, 112)
+         for i = 1, life.count do
+            love.graphics.setColor(255, 255, 255, 255)
+            love.graphics.draw(heartPic,
+                               H/200 + i * W/22,
+                               H / 200 + W / 200 + 5 * W/22,
+                               0,
+                               W / (25 * 400),
+                               W / (25 * 400))
+         end
       end
-   end
-
+   }
+   
    -- Music
-   music = {}
-   music.background = love.audio.newSource("Assets/sounds/heart.mp3")
+   music = {
+      background = love.audio.newSource("Assets/sounds/heart.mp3")
+   }
+
    music.background:setLooping(true)
    if sound then music.background:play() end
    music.background:setVolume(0.5)
@@ -249,8 +257,6 @@ function Game_Screen.draw ()
          end
       end
    end
-
-
 
    love.graphics.setColor(166, 167, 170, 100)
    local radius = objects.paddle.shape:getRadius()
@@ -319,7 +325,7 @@ function Game_Screen.draw ()
 
 end
 
-function  Game_Screen.update (dt)
+function Game_Screen.update (dt)
    local btColor = {
       normal  = {bg = {27, 162, 130, 180}, fg = {255, 255, 255}},
       hovered = {bg = {27, 162, 130, 120}, fg = {255, 255, 255}},
@@ -580,11 +586,11 @@ end
 
 -- Chamada quando a bolinha cai na borda inferior
 function onGameOver()
-   ScreenManager.changeTo ("Game_Over_Screen",
+   ScreenManager.changeTo("Game_Over_Screen",
    {
-     ["mode"] = mode,
-     ["score"] = score.count,
-     ["level"] = level,
+     mode = mode,
+     score = score.count,
+     level = level,
    })
 end
 
@@ -593,6 +599,6 @@ function onWin()
    level = level + 1
    world:destroy()
    initWorld()
-   -- Game_Screen.load()
 end
+
 return Game_Screen
