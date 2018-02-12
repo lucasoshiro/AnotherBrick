@@ -414,6 +414,20 @@ function Game_Screen.touchpressed(id, x, y, dx, dy, pressure)
    end
 end
 
+function Game_Screen.mousepressed(x, y, button)
+   print 'here'
+   if newLevel then
+      newLevel = not newLevel
+      local px,py = objects.paddle.body:getPosition ()
+      objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
+   end
+   if gameIsPaused then return end
+   objects.paddle.body:setLinearVelocity(0, 0)
+   local paddleRadius = objects.paddle.shape:getRadius()
+   local paddleX, paddleY = objects.paddle.body:getPosition()
+   local k = 2
+end
+
 function Game_Screen.touchmoved(id, x, y, dx, dy, pressure)
    if gameIsPaused or newLevel then return end
    if id == tid then
@@ -438,7 +452,26 @@ function Game_Screen.touchmoved(id, x, y, dx, dy, pressure)
    else
       objects.paddle.body:setLinearVelocity(0, 0)
    end
+end
 
+function Game_Screen.mousemoved(x, y, dx, dy, istouch)
+   local ajustedx = false
+   local ajustedy = false
+   local paddleRadius = objects.paddle.shape:getRadius()
+
+   if y - paddleRadius <= (3*H)/5 then objects.paddle.body:setY((3*H)/5 + paddleRadius + 1); ajustedy = true
+   elseif y >= H - borderWidth - 1 then objects.paddle.body:setY(H - borderWidth - 1); ajustedy = true
+   elseif x <= borderWidth + 1 then objects.paddle.body:setX(borderWidth + 1); ajustedx = true
+   elseif x >= W - borderWidth - 1 then objects.paddle.body:setX(W - borderWidth - 1); ajustedx = true
+   end
+
+   if not (ajustedx and ajustedy) then
+      if ajustedx then objects.paddle.body:setY(y)
+      elseif ajustedy then objects.paddle.body:setX(x)
+      else objects.paddle.body:setPosition(x, y)
+      end
+   end
+   objects.paddle.body:setLinearVelocity(dx/lastdt, dy/lastdt)
 end
 
 function Game_Screen.touchreleased(id, x, y, dx, dy, pressure)
