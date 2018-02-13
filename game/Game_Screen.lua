@@ -218,6 +218,66 @@ end
 
 --------------------------------------------------------------------------------
 
+function updateSuit()
+   local btColor = {
+      normal  = {bg = {27, 162, 130, 180},  fg = {255, 255, 255}},
+      hovered = {bg = {27, 162, 130, 120},  fg = {255, 255, 255}},
+      active  = {bg = {255, 255, 255, 180}, fg = {255, 255, 255}}
+   }
+
+   local radi = math.sqrt(W*W+H*H)/40
+   if suit:Button("||",
+                  {
+                     cornerRadius = radi,
+                     color = btColor,
+                     font = love.graphics.newFont (W*0.035)
+                  },
+                  W - W/8, H/30, 2*radi, 2*radi).hit then
+      
+      if not newLevel then gameIsPaused = not gameIsPaused end
+   end
+end
+
+function updatePaddlePowerups()
+   if (objects.paddle.timer > 0) then
+      objects.paddle.timer = objects.paddle.timer - 1
+      if (objects.paddle.timer == 0) then
+         objects.paddle.shape = love.physics.newCircleShape(W / 10)
+         objects.paddle.fixture:getShape():setRadius(W / 10)
+      end
+   end
+
+   if objects.ball.nitro > 0 then
+      objects.ball.nitro = objects.ball.nitro - 1
+      if objects.ball.nitro <= 0 then
+         local diag = math.sqrt (W*W + H*H)
+         limitBallVelocity(0.8 * diag, 0.8 * diag)
+      end
+   end
+end
+
+function updateBreaks()
+   for i, x in ipairs(breaks.elements) do
+      x.time = x.time - 1
+      if x.time < 0 then breaks.remove(i) end
+   end
+end
+
+function updateLife()
+   if objects.ball.body:getY() > H then
+      life.count = life.count - 1
+      if life.count < 0 then
+         onGameOver()
+      else
+         objects.ball.body:setPosition(W/3, H/2)
+         local px,py = objects.paddle.body:getPosition()
+         objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
+      end
+   end
+end
+
+--------------------------------------------------------------------------------
+
 -- Limita a velocidade da bola entre minV e maxV. Para não limitar um desses
 -- valores, substitua-o por nil.
 function limitBallVelocity(minV, maxV)
@@ -332,7 +392,7 @@ function Game_Screen.load (params)
    
    -- Music
    music = {
-      background = love.audio.newSource("Assets/sounds/heart.mp3")
+      background = love.audio.newSource "Assets/sounds/heart.mp3"
    }
 
    music.background:setLooping(true)
@@ -340,7 +400,7 @@ function Game_Screen.load (params)
    music.background:setVolume(0.5)
 
    -- Bomb Sound
-   music.explosion = love.audio.newSource("Assets/sounds/puo.wav")
+   music.explosion = love.audio.newSource "Assets/sounds/puo.wav"
 
    borderWidth = 1
 
@@ -380,29 +440,13 @@ function Game_Screen.draw()
 end
 
 function Game_Screen.update (dt)
-   local btColor = {
-      normal  = {bg = {27, 162, 130, 180},  fg = {255, 255, 255}},
-      hovered = {bg = {27, 162, 130, 120},  fg = {255, 255, 255}},
-      active  = {bg = {255, 255, 255, 180}, fg = {255, 255, 255}}
-   }
-
    if objects.paddle.oldPos then
       objects.paddle.fixture:getBody():setPosition(objects.paddle.oldPos.x,
                                                    objects.paddle.oldPos.y)
       objects.paddle.oldPos = nil
    end
 
-   local radi = math.sqrt(W*W+H*H)/40
-   if suit:Button("||",
-                  {
-                     cornerRadius = radi,
-                     color = btColor,
-                     font = love.graphics.newFont (W*0.035)
-                  },
-                  W - W/8, H/30, 2*radi, 2*radi).hit then
-      
-      if not newLevel then gameIsPaused = not gameIsPaused end
-   end
+   updateSuit()
 
    if gameIsPaused or newLevel then return end
 
@@ -414,42 +458,10 @@ function Game_Screen.update (dt)
       objects.paddle.fixture:getBody():setLinearVelocity(0, 0)
    end
 
-   timer = objects.paddle.timer
-   if (timer > 0) then
-      objects.paddle.timer = objects.paddle.timer - 1
-      if (objects.paddle.timer == 0) then
-         objects.paddle.shape = love.physics.newCircleShape(W / 10)
-         objects.paddle.fixture:getShape():setRadius(W / 10)
-      end
-   end
+   updatePaddlePowerups()
 
-   if objects.ball.nitro > 0 then
-      objects.ball.nitro = objects.ball.nitro - 1
-      if objects.ball.nitro <= 0 then
-         local diag = math.sqrt (W*W + H*H)
-         limitBallVelocity(0.8 * diag, 0.8 * diag)
-      end
-   end
+   if numBricks == 0 then onWin() end
 
-   if objects.ball.body:getY() > H then
-      life.count = life.count - 1
-      if life.count < 0 then
-         onGameOver()
-      else
-         objects.ball.body:setPosition(W/3, H/2)
-         local px,py = objects.paddle.body:getPosition()
-         objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
-      end
-   end
-
-   if numBricks == 0 then
-      onWin()
-   end
-
-   for i, x in ipairs(breaks.elements) do
-      x.time = x.time - 1
-      if x.time < 0 then breaks.remove(i) end
-   end
 end
 
 function Game_Screen.touchpressed(id, x, y, dx, dy, pressure)
