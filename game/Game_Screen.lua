@@ -104,10 +104,16 @@ function randomHardness()
       else                 return 3
       end
 
-   else
+   elseif mode == "hard" then
       if     k < 1/10 then return 1
       elseif k < 5/10 then return 2
       else                 return 3
+      end
+
+   elseif mode == "insane" then
+      if     k < 1/100 then return 1
+      elseif k < 1/50  then return 2
+      else                  return 3
       end
    end
 end
@@ -496,10 +502,11 @@ function endContact(a, b, coll)
       end
 
       local diag = math.sqrt(W*W + H*H)
-      if objects.ball.nitro > 0 then limitBallVelocity(diag*1.3, diag*1.3)
+      if objects.ball.nitro > 0 then limitBallVelocity(diag*1.3,   diag*1.3)
       elseif mode == "easy"     then limitBallVelocity(diag*0.372, diag*1.365)
       elseif mode == "medium"   then limitBallVelocity(diag*0.496, diag*1.488)
-      else                           limitBallVelocity(diag*0.744, diag*1.861)
+      elseif mode == "hard"     then limitBallVelocity(diag*0.744, diag*1.861)
+      elseif mode == "insane"   then limitBallVelocity(diag*1.3,   nil)
       end
    end
 end

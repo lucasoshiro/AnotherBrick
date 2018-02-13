@@ -25,7 +25,7 @@ ScreenManager = {
       if cur_screen and cur_screen.finish then cur_screen.finish() end
       cur_screen = require (name)
 
-      if cur_screen.load then cur_screen.load (params) end
+      if cur_screen.load then cur_screen.load(params) end
       
       for i, method in ipairs(love_methods) do
          if cur_screen[method] then
