@@ -4,11 +4,11 @@ local BrickCol = 10
 local BrickRow = 9
 local BrickH = H/(BrickRow*3)
 local heartPic = love.graphics.newImage "Assets/images/heart.png"
-local inc = {[0] = 1, [1] = 5, [2] = 10}
+local inc = {1, 5, 10}
 local hardnessColor = {
-   [0] = {R = 166, G = 167, B = 170},
-   [1] = {R = 96,  G = 136, B = 158},
-   [2] = {R = 40,  G = 76,  B = 115}
+   {R = 166, G = 167, B = 170},
+   {R = 96,  G = 136, B = 158},
+   {R = 40,  G = 76,  B = 115}
 }
 local hasCursor = love.mouse.hasCursor()
 
@@ -94,20 +94,20 @@ function randomHardness()
    local k = math.random()
    
    if mode == "easy" then
-      if k < 4/5 then return 0
-      else            return 1
+      if k < 4/5 then return 1
+      else            return 2
       end
 
    elseif mode == "medium" then
-      if     k < 6/10 then return 0
-      elseif k < 9/10 then return 1
-      else                 return 2
+      if     k < 6/10 then return 1
+      elseif k < 9/10 then return 2
+      else                 return 3
       end
 
    else
-      if     k < 1/10 then return 0
-      elseif k < 5/10 then return 1
-      else                 return 2
+      if     k < 1/10 then return 1
+      elseif k < 5/10 then return 2
+      else                 return 3
       end
    end
 end
@@ -386,7 +386,7 @@ function initBricks()
             powerup  = (powerupType == 1) and 1   or 0,
             life     = (powerupType == 2) and 1   or 0,
             nitro    = (powerupType == 3) and 500 or 0,
-            hardness = (powerupType > 0)  and 0   or randomHardness()
+            hardness = (powerupType > 0)  and 1   or randomHardness()
          }
          
          objects.bricks[i][j].fixture =
@@ -431,7 +431,7 @@ function brickContact(i, j)
       points = inc[brick.hardness]
    }
 
-   if brick.hardness == 0 then
+   if brick.hardness == 1 then
       brick.body:destroy()
 
       if (brick.powerup == 1) then
