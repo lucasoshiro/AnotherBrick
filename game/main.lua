@@ -1,5 +1,5 @@
-function love.load ()
-    love.window.setMode (400, 700)
+function love.load()
+    love.window.setMode(400, 700)
     W, H = love.graphics.getDimensions()
     ifFontLarge = love.graphics.newFont("Assets/Font/IndieFlower/IndieFlower.ttf", W/6)
     ifFontSmall = love.graphics.newFont("Assets/Font/IndieFlower/IndieFlower.ttf", W/11)

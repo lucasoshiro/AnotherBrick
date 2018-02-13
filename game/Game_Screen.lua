@@ -24,6 +24,51 @@ local hardnessColor = {
    [2] = {R = 40,  G = 76,  B = 115}
 }
 
+breaks = {
+   elements = {},
+   count = 0,
+   
+   insert = function(x)
+      breaks.elements[#breaks.elements + 1] = x
+   end,
+
+   remove = function(i)
+      table.remove(breaks.elements, i)
+   end,
+}
+
+score = {
+   count = 0,
+   draw = function ()
+      love.graphics.setColor(252, 210, 9)
+      love.graphics.setFont(ifFontSmall)
+      love.graphics.print('Score', H/200 + W/22, H/200)
+      love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
+   end,
+   
+   increment = function (hardness)
+      score.count = score.count + inc[hardness]
+   end,
+}
+
+life = {
+   count = 3,
+   draw = function ()
+      love.graphics.setColor(119, 170, 112)
+      for i = 1, life.count do
+         love.graphics.setColor(255, 255, 255, 255)
+         love.graphics.draw(heartPic,
+                            H/200 + i * W/22,
+                            H / 200 + W / 200 + 5 * W/22,
+                            0,
+                            W / (25 * 400),
+                            W / (25 * 400))
+      end
+   end
+}
+
+--------------------------------------------------------------------------------
+
 -- Devolve BrickCol + 1 posições que separam os tijolos em [0, W], sendo que o
 -- índice 1 é 0 e o último índice é W.
 function randomPositions()
@@ -190,11 +235,7 @@ end
 
 --------------------------------------------------------------------------------
 
-function initWorld()
-   world = love.physics.newWorld(0, 0, true)
-   world:setCallbacks(beginContact, endContact)
-   numBricks = (BrickCol - 2)*(BrickRow - 1)
-
+function initObjects()
    objects = {
       ceil = {
          body  = love.physics.newBody(world, W / 2, borderWidth / 2),
@@ -229,20 +270,9 @@ function initWorld()
    end
 
    objects.ball.body:setLinearVelocity(0,0)
+end
 
-   breaks = {
-      elements = {},
-      count = 0,
-      
-      insert = function (x)
-         breaks.elements[#breaks.elements + 1] = x
-      end,
-
-      remove = function (i)
-         table.remove(breaks.elements, i)
-      end,
-   }
-
+function initBricks()
    objects.bricks = {}
    for i = 2, BrickRow do
       objects.bricks[i] = {}
@@ -270,9 +300,24 @@ function initWorld()
          
       end
    end
+end
 
+function initWorld()
+   world = love.physics.newWorld(0, 0, true)
+   world:setCallbacks(beginContact, endContact)
+   numBricks = (BrickCol - 2)*(BrickRow - 1)
+
+   initObjects()
+   
+   breaks.count = 0
+   breaks.elements = {}
+   
+   initBricks()
+   
    newLevel = true
 end
+
+--------------------------------------------------------------------------------
 
 function Game_Screen.load (params)
    suit = suitLib.new()
@@ -280,40 +325,10 @@ function Game_Screen.load (params)
    mode = params
 
    gameTime = 0
-   
-   score = {
-      count = 0,
-      draw = function ()
-         love.graphics.setColor(252, 210, 9)
-         love.graphics.setFont(ifFontSmall)
-         love.graphics.print('Score', H/200 + W/22, H/200)
-         love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
-      end,
-      
-      increment = function (hardness)
-         score.count = score.count + inc[hardness]
-      end,
-   }
-   
+   score.count = 0
    level = 1
-
    gameIsPaused = false
-   
-   life = {
-      count = 3,
-      draw = function ()
-         love.graphics.setColor(119, 170, 112)
-         for i = 1, life.count do
-            love.graphics.setColor(255, 255, 255, 255)
-            love.graphics.draw(heartPic,
-                               H/200 + i * W/22,
-                               H / 200 + W / 200 + 5 * W/22,
-                               0,
-                               W / (25 * 400),
-                               W / (25 * 400))
-         end
-      end
-   }
+   life.count = 3
    
    -- Music
    music = {
