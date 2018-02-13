@@ -13,7 +13,7 @@ local music = nil
 local BrickCol = 10
 local BrickRow = 9
 local BrickH = H/(BrickRow*3)
-local heartPic = love.graphics.newImage("Assets/images/heart.png")
+local heartPic = love.graphics.newImage "Assets/images/heart.png"
 local inc = {[0] = 1, [1] = 5, [2] = 10}
 
 local numBricks
@@ -44,21 +44,6 @@ function randomPositions()
    end
    table.sort(positions)
    return positions
-end
-
--- Limita a velocidade da bola entre minV e maxV. Para não limitar um desses
--- valores, substitua-o por nil.
-function limitBallVelocity(minV, maxV)
-   local vx, vy = objects.ball.fixture:getBody():getLinearVelocity()
-   local v = math.sqrt(vx * vx + vy * vy)
-
-   if minV and v < minV then
-      local k = minV / v
-      objects.ball.fixture:getBody():setLinearVelocity(k * vx, k * vy)
-   elseif maxV and v > maxV then
-      local k = maxV / v
-      objects.ball.fixture:getBody():setLinearVelocity(k * vx, k * vy)
-   end
 end
 
 function randomHardness()
@@ -94,6 +79,27 @@ function randomPowerup()
    return 0
 end
 
+--------------------------------------------------------------------------------
+
+
+
+--------------------------------------------------------------------------------
+
+-- Limita a velocidade da bola entre minV e maxV. Para não limitar um desses
+-- valores, substitua-o por nil.
+function limitBallVelocity(minV, maxV)
+   local vx, vy = objects.ball.fixture:getBody():getLinearVelocity()
+   local v = math.sqrt(vx * vx + vy * vy)
+
+   if minV and v < minV then
+      local k = minV / v
+      objects.ball.fixture:getBody():setLinearVelocity(k * vx, k * vy)
+   elseif maxV and v > maxV then
+      local k = maxV / v
+      objects.ball.fixture:getBody():setLinearVelocity(k * vx, k * vy)
+   end
+end
+
 function initWorld()
    world = love.physics.newWorld(0, 0, true)
    world:setCallbacks(beginContact, endContact)
@@ -101,28 +107,28 @@ function initWorld()
 
    objects = {
       ceil = {
-         body = love.physics.newBody(world, W / 2, borderWidth / 2),
+         body  = love.physics.newBody(world, W / 2, borderWidth / 2),
          shape = love.physics.newRectangleShape(W, borderWidth),
       },
 
       leftWall = {
-         body = love.physics.newBody(world, borderWidth / 2, H / 2),
+         body  = love.physics.newBody(world, borderWidth / 2, H / 2),
          shape = love.physics.newRectangleShape(borderWidth, H),
       },
 
       rightWall = {
-         body = love.physics.newBody(world, W - borderWidth / 2, H / 2),
+         body  = love.physics.newBody(world, W - borderWidth / 2, H / 2),
          shape = love.physics.newRectangleShape(borderWidth, H),
       },
 
       ball = {
-         body = love.physics.newBody(world, W/3, H/2, "dynamic"),
+         body  = love.physics.newBody(world, W/3, H/2, "dynamic"),
          shape = love.physics.newCircleShape(W / 30),
          nitro = 0,
       },
 
       paddle = {
-         body = love.physics.newBody(world, W/2, H - W/10, "dynamic"),
+         body  = love.physics.newBody(world, W/2, H - W/10, "dynamic"),
          shape = love.physics.newCircleShape(W / 10),
          timer = -1,
       }
@@ -189,7 +195,7 @@ function Game_Screen.load (params)
       count = 0,
       draw = function ()
          love.graphics.setColor(252, 210, 9)
-         love.graphics.setFont (ifFontSmall)
+         love.graphics.setFont(ifFontSmall)
          love.graphics.print('Score', H/200 + W/22, H/200)
          love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
       end,
@@ -239,28 +245,28 @@ function Game_Screen.load (params)
 end
 
 function Game_Screen.back ()
-   ScreenManager.changeTo ("Menu_Screen")
+   ScreenManager.changeTo "Menu_Screen"
 end
 
 function Game_Screen.draw ()
    for i = 2, BrickRow do
       for j = 2, BrickCol - 1 do
-         if (objects.bricks[i][j] ~= nil) then
-            local objHard = objects.bricks[i][j].hardness
-            love.graphics.setColor (hardnessColor[objHard].R,hardnessColor[objHard].G,
+         brick = objects.bricks[i][j]
+         if (brick ~= nil) then
+            local objHard = brick.hardness
+            
+            love.graphics.setColor (hardnessColor[objHard].R,
+                                    hardnessColor[objHard].G,
                                     hardnessColor[objHard].B,
                                     255)
 
-            if (objects.bricks[i][j].powerup == 1) then
-               love.graphics.setColor(255, 0, 0, 255)
-            elseif objects.bricks[i][j].life == 1 then
-               love.graphics.setColor(0, 255, 0, 255)
-            elseif objects.bricks[i][j].nitro > 0 then
-               love.graphics.setColor(100 + math.sin(gameTime * 8) * 100,
-                                      235, 255, 255)
+            if brick.powerup == 1  then love.graphics.setColor(255, 0, 0, 255)
+            elseif brick.life == 1 then love.graphics.setColor(0, 255, 0, 255)
+            elseif brick.nitro > 0 then love.graphics.setColor(100 + math.sin(gameTime * 8) * 100, 235, 255, 255)
             end
 
-            love.graphics.polygon("fill", objects.bricks[i][j].body:getWorldPoints(objects.bricks[i][j].shape:getPoints()))
+            love.graphics.polygon("fill",
+                                  brick.body:getWorldPoints(brick.shape:getPoints()))
          end
       end
    end
@@ -318,24 +324,24 @@ function Game_Screen.draw ()
    suit:draw()
 
    if newLevel then
-      love.graphics.setColor (255, 255, 255, 255)
-      love.graphics.setFont (ifFontLarge)
-      love.graphics.printf ("Level " .. level, 0, H/2, W, "center")
+      love.graphics.setColor(255, 255, 255, 255)
+      love.graphics.setFont(ifFontLarge)
+      love.graphics.printf("Level " .. level, 0, H/2, W, "center")
       return
    end
 
    if gameIsPaused then
-      love.graphics.setColor (255, 255, 255, 255)
-      love.graphics.setFont (ifFontSmall)
-      love.graphics.printf ("Paused", 0, H/2, W, "center")
+      love.graphics.setColor(255, 255, 255, 255)
+      love.graphics.setFont(ifFontSmall)
+      love.graphics.printf("Paused", 0, H/2, W, "center")
    end
 
 end
 
 function Game_Screen.update (dt)
    local btColor = {
-      normal  = {bg = {27, 162, 130, 180}, fg = {255, 255, 255}},
-      hovered = {bg = {27, 162, 130, 120}, fg = {255, 255, 255}},
+      normal  = {bg = {27, 162, 130, 180},  fg = {255, 255, 255}},
+      hovered = {bg = {27, 162, 130, 120},  fg = {255, 255, 255}},
       active  = {bg = {255, 255, 255, 180}, fg = {255, 255, 255}}
    }
 
@@ -346,7 +352,14 @@ function Game_Screen.update (dt)
    end
 
    local radi = math.sqrt(W*W+H*H)/40
-   if suit:Button("||", {["cornerRadius"] = radi, ["color"] = btColor, ["font"] = love.graphics.newFont (W*0.035)}, W - W/8, H/30, 2*radi, 2*radi).hit then
+   if suit:Button("||",
+                  {
+                     cornerRadius = radi,
+                     color = btColor,
+                     font = love.graphics.newFont (W*0.035)
+                  },
+                  W - W/8, H/30, 2*radi, 2*radi).hit then
+      
       if not newLevel then gameIsPaused = not gameIsPaused end
    end
 
@@ -508,10 +521,10 @@ function beginContact(a, b, coll)
                life.count = life.count + objects.bricks[i][j].life
                
                breaks.insert({
-                     ["x"] = objects.bricks[i][j].fixture:getBody():getX(),
-                     ["y"] = objects.bricks[i][j].fixture:getBody():getY(),
-                     ["time"] = 40,
-                     ["points"] = inc[objects.bricks[i][j].hardness]
+                     x      = objects.bricks[i][j].fixture:getBody():getX(),
+                     y      = objects.bricks[i][j].fixture:getBody():getY(),
+                     time   = 40,
+                     points = inc[objects.bricks[i][j].hardness]
                })
 
                if (objects.bricks[i][j].hardness == 0) then
@@ -538,8 +551,8 @@ function beginContact(a, b, coll)
    end
 
    objects.paddle.oldPos = {
-      ['x'] = objects.paddle.fixture:getBody():getX(),
-      ['y'] = objects.paddle.fixture:getBody():getY()
+      x = objects.paddle.fixture:getBody():getX(),
+      y = objects.paddle.fixture:getBody():getY()
    }
 end
 
