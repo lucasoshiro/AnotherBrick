@@ -2,19 +2,10 @@ local suitLib = require 'suit'
 local suit = nil
 local title = love.graphics.newText(ifFontLarge, "Another Brick")
 
-local titley = H/20
-
-local ey = 5  * H/20
-local my = 7  * H/20
-local hy = 9  * H/20
-local iy = 11 * H/20
-
-local buttonh = H/17
-local buttonw = (2*W)/3
-local buttonx = W/6
-
 local music = nil
 local chk = nil
+
+local titley, ey, my, hy, iy, buttonh, buttonw, buttonx
 
 local modeButtons = {
    easy   = {y = 5  * H/20},
@@ -23,8 +14,22 @@ local modeButtons = {
    insane = {y = 11 * H/20},
 }
 
+local function setSizes()
+   titley = H/20
+
+   ey = 5  * H/20
+   my = 7  * H/20
+   hy = 9  * H/20
+   iy = 11 * H/20
+
+   buttonh = H/17
+   buttonw = (2*W)/3
+   buttonx = W/6
+end
+
 Menu_Screen = {
    load = function(params)
+      setSizes()
       love.graphics.setBackgroundColor(19, 25, 38, 0)
       music = {}
       music.background = love.audio.newSource "Assets/sounds/midnight.mp3"
@@ -50,6 +55,8 @@ Menu_Screen = {
    end,
 
    update = function(dt)
+      -- print()
+      -- setSizes()
       for mode, button in pairs(modeButtons) do
          if suit:Button(mode, buttonx, button.y, buttonw, buttonh).hit then
             ScreenManager.changeTo("Game_Screen", mode)
@@ -57,16 +64,22 @@ Menu_Screen = {
          end
       end
 
-      if suit:Checkbox(chk, W/4, H - (2*H)/10, W/2, buttonh).hit then
-         sound = not sound
-         if sound then music.background:play ()
-         else music.background:pause () end
+      -- if suit:Checkbox(chk, W/4, H - (2*H)/10, W/2, buttonh).hit then
+      --    sound = not sound
+      --    if sound then music.background:play ()
+      --    else music.background:pause () end
+      -- end
+
+      if suit:Button("Options", buttonx, H - (2*H)/10, buttonw, buttonh).hit then
+         ScreenManager.changeTo("Config_Screen")
+         return
       end
 
       if suit:Button("Credits", buttonx, H - (2*H)/17, buttonw, buttonh).hit then
          ScreenManager.changeTo("Credits_Screen")
          return
       end
+      
    end,
 
    finish = function()

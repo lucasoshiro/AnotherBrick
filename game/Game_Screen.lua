@@ -2,7 +2,6 @@ local suitLib = require 'suit'
 
 local BrickCol = 10
 local BrickRow = 9
-local BrickH = H/(BrickRow*3)
 local heartPic = love.graphics.newImage "Assets/images/heart.png"
 local inc = {1, 5, 10}
 local hardnessColor = {
@@ -12,57 +11,9 @@ local hardnessColor = {
 }
 local hasCursor = love.mouse.hasCursor()
 
-local suit       = nil
-local tid        = nil
-local mouseMoved = nil
-local mode       = nil
-local level      = nil
-local newLevel   = nil
-local music      = nil
-local numBricks
-
-breaks = {
-   elements = {},
-   count = 0,
-   
-   insert = function(x)
-      breaks.elements[#breaks.elements + 1] = x
-   end,
-
-   remove = function(i)
-      table.remove(breaks.elements, i)
-   end,
-}
-
-score = {
-   count = 0,
-   draw = function()
-      love.graphics.setColor(252, 210, 9)
-      love.graphics.setFont(ifFontSmall)
-      love.graphics.print('Score', H/200 + W/22, H/200)
-      love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
-   end,
-   
-   increment = function(hardness)
-      score.count = score.count + inc[hardness]
-   end,
-}
-
-life = {
-   count = 3,
-   draw = function()
-      love.graphics.setColor(119, 170, 112)
-      for i = 1, life.count do
-         love.graphics.setColor(255, 255, 255, 255)
-         love.graphics.draw(heartPic,
-                            H/200 + i * W/22,
-                            H / 200 + W / 200 + 5 * W/22,
-                            0,
-                            W / (25 * 400),
-                            W / (25 * 400))
-      end
-   end
-}
+local BrickH
+local suit, tid, mouseMoved, mode, level, newLevel, music, numBricks
+local breaks, score, life
 
 --------------------------------------------------------------------------------
 --                              RANDOM FUNCTIONS                              --
@@ -336,6 +287,68 @@ end
 --                              INIT FUNCTIONS                                --
 --------------------------------------------------------------------------------
 
+function initVars()
+   suit       = nil
+   tid        = nil
+   mouseMoved = nil
+   mode       = nil
+   level      = nil
+   newLevel   = nil
+   music      = nil
+
+   BrickH = H/(BrickRow*3)
+   
+   breaks = {
+      elements = {},
+      count = 0,
+      
+      insert = function(x)
+         breaks.elements[#breaks.elements + 1] = x
+      end,
+
+      remove = function(i)
+         table.remove(breaks.elements, i)
+      end,
+   }
+
+   score = {
+      count = 0,
+      draw = function()
+         love.graphics.setColor(252, 210, 9)
+         love.graphics.setFont(ifFontSmall)
+         love.graphics.print('Score', H/200 + W/22, H/200)
+         love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
+      end,
+      
+      increment = function(hardness)
+         score.count = score.count + inc[hardness]
+      end,
+   }
+
+   life = {
+      count = 3,
+      draw = function()
+         love.graphics.setColor(119, 170, 112)
+         for i = 1, life.count do
+            love.graphics.setColor(255, 255, 255, 255)
+            love.graphics.draw(heartPic,
+                               H/200 + i * W/22,
+                               H / 200 + W / 200 + 5 * W/22,
+                               0,
+                               W / (25 * 400),
+                               W / (25 * 400))
+         end
+      end
+   }
+
+   world = love.physics.newWorld(0, 0, true)
+   world:setCallbacks(beginContact, endContact)
+   numBricks = (BrickCol - 2)*(BrickRow - 1)
+
+   breaks.count = 0
+   breaks.elements = {}
+end
+
 function initObjects()
    objects = {
       ceil = {
@@ -404,17 +417,8 @@ function initBricks()
 end
 
 function initWorld()
-   world = love.physics.newWorld(0, 0, true)
-   world:setCallbacks(beginContact, endContact)
-   numBricks = (BrickCol - 2)*(BrickRow - 1)
-
    initObjects()
-   
-   breaks.count = 0
-   breaks.elements = {}
-   
    initBricks()
-   
    newLevel = true
 end
 
@@ -542,6 +546,7 @@ end
 
 Game_Screen = {
    load = function(params)
+      initVars()
       suit = suitLib.new()
       love.physics.setMeter(64)
       mode = params
