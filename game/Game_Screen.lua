@@ -81,6 +81,51 @@ end
 
 --------------------------------------------------------------------------------
 
+function drawBricks()
+   for i = 2, BrickRow do
+      for j = 2, BrickCol - 1 do
+         brick = objects.bricks[i][j]
+         if (brick ~= nil) then
+            local objHard = brick.hardness
+            
+            love.graphics.setColor (hardnessColor[objHard].R,
+                                    hardnessColor[objHard].G,
+                                    hardnessColor[objHard].B,
+                                    255)
+
+            if brick.powerup == 1  then love.graphics.setColor(255, 0, 0, 255)
+            elseif brick.life == 1 then love.graphics.setColor(0, 255, 0, 255)
+            elseif brick.nitro > 0 then love.graphics.setColor(100 + math.sin(gameTime * 8) * 100, 235, 255, 255)
+            end
+
+            love.graphics.polygon("fill",
+                                  brick.body:getWorldPoints(brick.shape:getPoints()))
+         end
+      end
+   end
+end
+
+function drawLine()
+   love.graphics.setColor(166, 167, 170, 100)
+   local a = 0
+   local b = 8
+   local dist = 8
+   local dashs = W / dist
+   for i = 1, dashs do
+      love.graphics.line (a, (3*H)/5, b, (3*H)/5)
+      a = a + 2 * dist
+      b = a + dist
+   end
+end
+
+function drawBreakScore()
+   for i, brk in ipairs(breaks.elements) do
+      love.graphics.setFont(ifFontTiny)
+      love.graphics.setColor(252, 210, 9, brk.time * 6)
+      love.graphics.print('+' .. brk.points, brk.x, brk.y - 40 + brk.time)
+   end
+end
+
 function drawBorders()
    love.graphics.setColor(72, 160, 14, 0)
    love.graphics.polygon("fill",
@@ -283,50 +328,13 @@ function Game_Screen.back ()
 end
 
 function Game_Screen.draw ()
-   for i = 2, BrickRow do
-      for j = 2, BrickCol - 1 do
-         brick = objects.bricks[i][j]
-         if (brick ~= nil) then
-            local objHard = brick.hardness
-            
-            love.graphics.setColor (hardnessColor[objHard].R,
-                                    hardnessColor[objHard].G,
-                                    hardnessColor[objHard].B,
-                                    255)
-
-            if brick.powerup == 1  then love.graphics.setColor(255, 0, 0, 255)
-            elseif brick.life == 1 then love.graphics.setColor(0, 255, 0, 255)
-            elseif brick.nitro > 0 then love.graphics.setColor(100 + math.sin(gameTime * 8) * 100, 235, 255, 255)
-            end
-
-            love.graphics.polygon("fill",
-                                  brick.body:getWorldPoints(brick.shape:getPoints()))
-         end
-      end
-   end
-
-   love.graphics.setColor(166, 167, 170, 100)
-   local radius = objects.paddle.shape:getRadius()
-   local a = 0
-   local b = 8
-   local dist = 8
-   local dashs = W / dist
-   for i = 1, dashs do
-      love.graphics.line (a, (3*H)/5, b, (3*H)/5)
-      a = a + 2 * dist
-      b = a + dist
-   end
-
+   drawBricks()
+   drawLine()
    drawBorders()
    drawBall()
    drawPaddle()
-
-   for i, brk in ipairs(breaks.elements) do
-      love.graphics.setFont(ifFontTiny)
-      love.graphics.setColor(252, 210, 9, brk.time * 6)
-      love.graphics.print('+' .. brk.points, brk.x, brk.y - 40 + brk.time)
-   end
-
+   drawBreakScore()
+   
    score.draw()
    life.draw()
    suit:draw()
@@ -343,7 +351,6 @@ function Game_Screen.draw ()
       love.graphics.setFont(ifFontSmall)
       love.graphics.printf("Paused", 0, H/2, W, "center")
    end
-
 end
 
 function Game_Screen.update (dt)
