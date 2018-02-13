@@ -280,6 +280,7 @@ end
 function onWin()
    level = level + 1
    world:destroy()
+   world = nil
    initWorld()
 end
 
@@ -340,10 +341,6 @@ function initVars()
          end
       end
    }
-
-   world = love.physics.newWorld(0, 0, true)
-   world:setCallbacks(beginContact, endContact)
-   numBricks = (BrickCol - 2)*(BrickRow - 1)
 
    breaks.count = 0
    breaks.elements = {}
@@ -417,6 +414,10 @@ function initBricks()
 end
 
 function initWorld()
+   world = love.physics.newWorld(0, 0, true)
+   world:setCallbacks(beginContact, endContact)
+   numBricks = (BrickCol - 2)*(BrickRow - 1)
+
    initObjects()
    initBricks()
    newLevel = true
