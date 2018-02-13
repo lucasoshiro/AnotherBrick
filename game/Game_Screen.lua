@@ -81,7 +81,41 @@ end
 
 --------------------------------------------------------------------------------
 
+function drawBorders()
+   love.graphics.setColor(72, 160, 14, 0)
+   love.graphics.polygon("fill",
+                         objects.ceil.body:getWorldPoints(objects.ceil.shape:getPoints()))
 
+   love.graphics.polygon("fill",
+                         objects.leftWall.body:getWorldPoints(objects.leftWall.shape:getPoints()))
+
+   love.graphics.polygon("fill",
+                         objects.rightWall.body:getWorldPoints(objects.rightWall.shape:getPoints()))
+end
+
+function drawBall()
+   love.graphics.setColor((1 - objects.ball.nitro / 500) * 119
+         + (objects.ball.nitro / 500) * (100 + math.sin(gameTime * 8) * 100),
+      170 + 65 * objects.ball.nitro / 500,
+      112 + 143 * objects.ball.nitro / 500,
+      255)
+
+   love.graphics.circle("fill",
+                        objects.ball.body:getX(),
+                        objects.ball.body:getY(),
+                        objects.ball.shape:getRadius())
+end
+
+function drawPaddle()
+   love.graphics.setColor(objects.paddle.timer / 500 * 49 + 206,
+                          (1 - objects.paddle.timer / 500) * 206,
+                          (1 - objects.paddle.timer / 500) * 206)
+   
+   love.graphics.circle("fill",
+                        objects.paddle.body:getX(),
+                        objects.paddle.body:getY(),
+                        objects.paddle.shape:getRadius())
+end
 
 --------------------------------------------------------------------------------
 
@@ -283,35 +317,9 @@ function Game_Screen.draw ()
       b = a + dist
    end
 
-   love.graphics.setColor(72, 160, 14, 0)
-   love.graphics.polygon("fill",
-                         objects.ceil.body:getWorldPoints(objects.ceil.shape:getPoints()))
-
-   love.graphics.setColor(72, 160, 14, 0)
-   love.graphics.polygon("fill",
-                         objects.leftWall.body:getWorldPoints(objects.leftWall.shape:getPoints()))
-
-   love.graphics.setColor(72, 160, 14, 0)
-   love.graphics.polygon("fill",
-                         objects.rightWall.body:getWorldPoints(objects.rightWall.shape:getPoints()))
-
-   love.graphics.setColor((1 - objects.ball.nitro / 500) * 119
-         + (objects.ball.nitro / 500) * (100 + math.sin(gameTime * 8) * 100),
-      170 + 65 * objects.ball.nitro / 500,
-      112 + 143 * objects.ball.nitro / 500,
-      255)
-
-   love.graphics.circle("fill",
-                        objects.ball.body:getX(),
-                        objects.ball.body:getY(),
-                        objects.ball.shape:getRadius())
-
-   love.graphics.setColor(objects.paddle.timer / 500 * 49 + 206,
-                          (1 - objects.paddle.timer / 500) * 206,
-                          (1 - objects.paddle.timer / 500) * 206)
-   love.graphics.circle("fill", objects.paddle.body:getX(),
-                        objects.paddle.body:getY(),
-                        objects.paddle.shape:getRadius())
+   drawBorders()
+   drawBall()
+   drawPaddle()
 
    for i, brk in ipairs(breaks.elements) do
       love.graphics.setFont(ifFontTiny)
