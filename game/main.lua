@@ -14,8 +14,9 @@ function love.load()
    ifFontVerySmall = love.graphics.newFont("Assets/Font/IndieFlower/IndieFlower.ttf", W/22)
    ifFontTiny = love.graphics.newFont("Assets/Font/IndieFlower/IndieFlower.ttf", W/25)
    
-   sound = true
-   music = true
+   playfx    = true
+   playmusic = true
+   
    osName = love.system.getOS()
 
    ScreenManager = require 'ScreenManager'

@@ -429,7 +429,7 @@ end
 function brickContact(i, j)
    local brick = objects.bricks[i][j]
    
-   if sound then music.explosion:play() end
+   if playfx then music.explosion:play() end
    
    score.increment(brick.hardness)
    life.count = life.count + brick.life
@@ -563,7 +563,7 @@ Game_Screen = {
       }
 
       music.background:setLooping(true)
-      if sound then music.background:play() end
+      if playmusic then music.background:play() end
       music.background:setVolume(0.5)
 
       -- Bomb Sound

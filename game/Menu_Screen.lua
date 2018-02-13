@@ -34,10 +34,10 @@ Menu_Screen = {
       music = {}
       music.background = love.audio.newSource "Assets/sounds/midnight.mp3"
       music.background:setLooping(true)
-      if sound then music.background:play() end
+      if playmusic then music.background:play() end
       music.background:setVolume(0.5)
       suit = suitLib.new()
-      chk = {checked = sound, text = "Sounds"}
+      -- chk = {checked = sound, text = "Sounds"}
    end,
 
    back = function()

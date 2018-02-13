@@ -2,20 +2,24 @@ local suitLib = require 'suit'
 
 local title = love.graphics.newText(ifFontLarge, "Options")
 
-local m = false
-
 local titley, buttonh, buttonw, buttonx
 
 local soundCheckBoxes = {
-   fx    = {checked = sound,
+   fx    = {checked = playfx,
             text = "Sound FX",
             y = 5 * H/20,
-            onclick = function() sound = not sound end},
+            onclick = function()
+               playfx = not playfx
+            end
+   },
    
-   music = {checked = n,
+   music = {checked = playmusic,
             text = "Music",
             y = 7 * H/20,
-            onclick = function() m = not m end}
+            onclick = function()
+               playmusic = not playmusic
+            end
+   }
 }
 
 local screenSizeButtons = {
