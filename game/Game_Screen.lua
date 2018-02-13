@@ -1,26 +1,25 @@
 local suitLib = require 'suit'
-local suit = nil
-
-local tid = nil
-local mode = nil
-local level = nil
-local newLevel = nil
-
-local music = nil
 
 local BrickCol = 10
 local BrickRow = 9
 local BrickH = H/(BrickRow*3)
 local heartPic = love.graphics.newImage "Assets/images/heart.png"
 local inc = {[0] = 1, [1] = 5, [2] = 10}
-
-local numBricks
-
 local hardnessColor = {
    [0] = {R = 166, G = 167, B = 170},
    [1] = {R = 96,  G = 136, B = 158},
    [2] = {R = 40,  G = 76,  B = 115}
 }
+local hasCursor = love.mouse.hasCursor()
+
+local suit       = nil
+local tid        = nil
+local mouseMoved = nil
+local mode       = nil
+local level      = nil
+local newLevel   = nil
+local music      = nil
+local numBricks
 
 breaks = {
    elements = {},
@@ -37,21 +36,21 @@ breaks = {
 
 score = {
    count = 0,
-   draw = function ()
+   draw = function()
       love.graphics.setColor(252, 210, 9)
       love.graphics.setFont(ifFontSmall)
       love.graphics.print('Score', H/200 + W/22, H/200)
       love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
    end,
    
-   increment = function (hardness)
+   increment = function(hardness)
       score.count = score.count + inc[hardness]
    end,
 }
 
 life = {
    count = 3,
-   draw = function ()
+   draw = function()
       love.graphics.setColor(119, 170, 112)
       for i = 1, life.count do
          love.graphics.setColor(255, 255, 255, 255)
@@ -146,10 +145,10 @@ function drawBricks()
          if (brick ~= nil) then
             local objHard = brick.hardness
             
-            love.graphics.setColor (hardnessColor[objHard].R,
-                                    hardnessColor[objHard].G,
-                                    hardnessColor[objHard].B,
-                                    255)
+            love.graphics.setColor(hardnessColor[objHard].R,
+                                   hardnessColor[objHard].G,
+                                   hardnessColor[objHard].B,
+                                   255)
 
             if brick.powerup == 1  then love.graphics.setColor(255, 0, 0, 255)
             elseif brick.life == 1 then love.graphics.setColor(0, 255, 0, 255)
@@ -244,6 +243,14 @@ function updateSuit()
    end
 end
 
+function updateMouse()
+   if not hasCursor then return end
+   if not mouseMoved then
+      objects.paddle.body:setLinearVelocity(0, 0)
+   end
+   mouseMoved = false
+end
+
 function updatePaddlePowerups()
    if (objects.paddle.timer > 0) then
       objects.paddle.timer = objects.paddle.timer - 1
@@ -283,11 +290,12 @@ function updateLife()
 end
 
 --------------------------------------------------------------------------------
+--                               AUX FUNCTIONS                                --
+--------------------------------------------------------------------------------
 
 -- Limita a velocidade da bola entre minV e maxV. Para não limitar um desses
 -- valores, substitua-o por nil.
 function limitBallVelocity(minV, maxV)
-   print 'here'
    local vx, vy = objects.ball.fixture:getBody():getLinearVelocity()
    local v = math.sqrt(vx * vx + vy * vy)
 
@@ -476,7 +484,6 @@ function endContact(a, b, coll)
    local ballFixture, otherFixture = detectFixtures(a, b)
 
    if ballFixture and otherFixture then
-      print 'ccccc'
       coll:setRestitution(1.0)
       otherFixture:getBody():setLinearVelocity(0, 0)
       
@@ -488,15 +495,38 @@ function endContact(a, b, coll)
          end
       end
 
-      print 'eeeee'
-
       local diag = math.sqrt(W*W + H*H)
       if objects.ball.nitro > 0 then limitBallVelocity(diag*1.3, diag*1.3)
-      elseif mode == "easy" then limitBallVelocity(diag*0.372, diag*1.365)
-      elseif mode == "medium" then limitBallVelocity(diag*0.496, diag*1.488)
-      else limitBallVelocity(diag*0.744, diag*1.861)
+      elseif mode == "easy"     then limitBallVelocity(diag*0.372, diag*1.365)
+      elseif mode == "medium"   then limitBallVelocity(diag*0.496, diag*1.488)
+      else                           limitBallVelocity(diag*0.744, diag*1.861)
       end
    end
+end
+
+--------------------------------------------------------------------------------
+--                              INPUT FUNCTIONS                               --
+--------------------------------------------------------------------------------
+
+function move(x, y, dx, dy)
+   if gameIsPaused or newLevel then return end
+   local ajustedx = false
+   local ajustedy = false
+   local paddleRadius = objects.paddle.shape:getRadius()
+
+   if y - paddleRadius <= (3*H)/5 then objects.paddle.body:setY((3*H)/5 + paddleRadius + 1); ajustedy = true
+   elseif y >= H - borderWidth - 1 then objects.paddle.body:setY(H - borderWidth - 1); ajustedy = true
+   elseif x <= borderWidth + 1 then objects.paddle.body:setX(borderWidth + 1); ajustedx = true
+   elseif x >= W - borderWidth - 1 then objects.paddle.body:setX(W - borderWidth - 1); ajustedx = true
+   end
+
+   if not (ajustedx and ajustedy) then
+      if ajustedx then objects.paddle.body:setY(y)
+      elseif ajustedy then objects.paddle.body:setX(x)
+      else objects.paddle.body:setPosition(x, y)
+      end
+   end
+   objects.paddle.body:setLinearVelocity(dx/lastdt, dy/lastdt)
 end
 
 --------------------------------------------------------------------------------
@@ -572,6 +602,7 @@ Game_Screen = {
       end
 
       updateSuit()
+      updateMouse()
 
       if gameIsPaused or newLevel then return end
 
@@ -598,7 +629,9 @@ Game_Screen = {
          objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
       end
       if gameIsPaused then return end
+      
       objects.paddle.body:setLinearVelocity(0, 0)
+      
       local paddleRadius = objects.paddle.shape:getRadius()
       local paddleX, paddleY = objects.paddle.body:getPosition()
       local k = 2
@@ -611,6 +644,12 @@ Game_Screen = {
       end
    end,
 
+   touchmoved = function(id, x, y, dx, dy, pressure)
+      if id == tid then move(x, y, dx, dy)
+      else objects.paddle.body:setLinearVelocity(0, 0)
+      end
+   end,
+
    mousepressed = function(x, y, button)
       if newLevel then
          newLevel = not newLevel
@@ -618,56 +657,11 @@ Game_Screen = {
          objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
       end
       if gameIsPaused then return end
-      objects.paddle.body:setLinearVelocity(0, 0)
-      local paddleRadius = objects.paddle.shape:getRadius()
-      local paddleX, paddleY = objects.paddle.body:getPosition()
-      local k = 2
-   end,
-
-   touchmoved = function(id, x, y, dx, dy, pressure)
-      if gameIsPaused or newLevel then return end
-      if id == tid then
-         local ajustedx = false
-         local ajustedy = false
-         local paddleRadius = objects.paddle.shape:getRadius()
-
-         if y - paddleRadius <= (3*H)/5 then objects.paddle.body:setY((3*H)/5 + paddleRadius + 1); ajustedy = true
-         elseif y >= H - borderWidth - 1 then objects.paddle.body:setY(H - borderWidth - 1); ajustedy = true
-         elseif x <= borderWidth + 1 then objects.paddle.body:setX(borderWidth + 1); ajustedx = true
-         elseif x >= W - borderWidth - 1 then objects.paddle.body:setX(W - borderWidth - 1); ajustedx = true
-         end
-
-         if not (ajustedx and ajustedy) then
-            if ajustedx then objects.paddle.body:setY(y)
-            elseif ajustedy then objects.paddle.body:setX(x)
-            else objects.paddle.body:setPosition(x, y)
-            end
-         end
-         objects.paddle.body:setLinearVelocity(dx/lastdt, dy/lastdt)
-
-      else
-         objects.paddle.body:setLinearVelocity(0, 0)
-      end
    end,
 
    mousemoved = function(x, y, dx, dy, istouch)
-      local ajustedx = false
-      local ajustedy = false
-      local paddleRadius = objects.paddle.shape:getRadius()
-
-      if y - paddleRadius <= (3*H)/5 then objects.paddle.body:setY((3*H)/5 + paddleRadius + 1); ajustedy = true
-      elseif y >= H - borderWidth - 1 then objects.paddle.body:setY(H - borderWidth - 1); ajustedy = true
-      elseif x <= borderWidth + 1 then objects.paddle.body:setX(borderWidth + 1); ajustedx = true
-      elseif x >= W - borderWidth - 1 then objects.paddle.body:setX(W - borderWidth - 1); ajustedx = true
-      end
-
-      if not (ajustedx and ajustedy) then
-         if ajustedx then objects.paddle.body:setY(y)
-         elseif ajustedy then objects.paddle.body:setX(x)
-         else objects.paddle.body:setPosition(x, y)
-         end
-      end
-      objects.paddle.body:setLinearVelocity(dx/lastdt, dy/lastdt)
+      mouseMoved = true
+      move(x, y, dx, dy)
    end,
 
    touchreleased = function(id, x, y, dx, dy, pressure)
