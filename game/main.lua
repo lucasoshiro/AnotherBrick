@@ -1,4 +1,3 @@
-
 function love.load ()
     love.window.setMode (400, 700)
     W, H = love.graphics.getDimensions()
@@ -10,6 +9,6 @@ function love.load ()
 
     ScreenManager = require 'ScreenManager'
     math.randomseed (os.time())
-    math.random () -- discarta o primeiro valor aleatório
+    math.random () -- descarta o primeiro valor aleatório
     ScreenManager.changeTo 'Menu_Screen'
 end

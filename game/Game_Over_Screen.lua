@@ -19,7 +19,7 @@ function Game_Over_Screen.draw()
   suit:draw()
 end
 
-function  Game_Over_Screen.update(dt)
+function Game_Over_Screen.update(dt)
   if suit:Button("Return to menu", W/6, H/2, (2*W)/3, H/17).hit then
       ScreenManager.changeTo("Menu_Screen")
       return
@@ -33,6 +33,5 @@ end
 function Game_Over_Screen.finish ()
     suit = nil
 end
-
 
 return Game_Over_Screen

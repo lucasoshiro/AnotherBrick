@@ -81,10 +81,19 @@ end
 
 --------------------------------------------------------------------------------
 
+function detectFixtures(a, b)
+   if a == objects.ball.fixture     then return a, b
+   elseif b == objects.ball.fixture then return b, a
+   end
+end
+
+--------------------------------------------------------------------------------
+
 function drawBricks()
    for i = 2, BrickRow do
       for j = 2, BrickCol - 1 do
-         brick = objects.bricks[i][j]
+         local brick = objects.bricks[i][j]
+         
          if (brick ~= nil) then
             local objHard = brick.hardness
             
@@ -95,7 +104,8 @@ function drawBricks()
 
             if brick.powerup == 1  then love.graphics.setColor(255, 0, 0, 255)
             elseif brick.life == 1 then love.graphics.setColor(0, 255, 0, 255)
-            elseif brick.nitro > 0 then love.graphics.setColor(100 + math.sin(gameTime * 8) * 100, 235, 255, 255)
+            elseif brick.nitro > 0 then love.graphics.setColor(100 + math.sin(gameTime * 8) * 100,
+                                                               235, 255, 255)
             end
 
             love.graphics.polygon("fill",
@@ -128,14 +138,13 @@ end
 
 function drawBorders()
    love.graphics.setColor(72, 160, 14, 0)
-   love.graphics.polygon("fill",
-                         objects.ceil.body:getWorldPoints(objects.ceil.shape:getPoints()))
 
-   love.graphics.polygon("fill",
-                         objects.leftWall.body:getWorldPoints(objects.leftWall.shape:getPoints()))
-
-   love.graphics.polygon("fill",
-                         objects.rightWall.body:getWorldPoints(objects.rightWall.shape:getPoints()))
+   for i, border in ipairs({ceil, leftWall, rightWall}) do
+      love.graphics.polygon("fill",
+                            objects[border].body
+                               :getWorldPoints(objects[border].shape
+                                                  :getPoints()))
+   end
 end
 
 function drawBall()
@@ -178,6 +187,8 @@ function limitBallVelocity(minV, maxV)
       objects.ball.fixture:getBody():setLinearVelocity(k * vx, k * vy)
    end
 end
+
+--------------------------------------------------------------------------------
 
 function initWorld()
    world = love.physics.newWorld(0, 0, true)
@@ -323,11 +334,11 @@ function Game_Screen.load (params)
    lastdt = 1
 end
 
-function Game_Screen.back ()
+function Game_Screen.back()
    ScreenManager.changeTo "Menu_Screen"
 end
 
-function Game_Screen.draw ()
+function Game_Screen.draw()
    drawBricks()
    drawLine()
    drawBorders()
@@ -511,15 +522,7 @@ function Game_Screen.touchreleased(id, x, y, dx, dy, pressure)
 end
 
 function beginContact(a, b, coll)
-   local ballFixture, otherFixture
-
-   if a == objects.ball.fixture then
-      ballFixture = a
-      otherFixture = b
-   elseif b == objects.ball.fixture then
-      ballFixture = b
-      otherFixture = a
-   end
+   local ballFixture, otherFixture = detectFixtures(a, b)
 
    if ballFixture and otherFixture then
       coll:setRestitution(1.0)
@@ -528,37 +531,38 @@ function beginContact(a, b, coll)
 
       for i = 2, BrickRow do
          for j = 2, BrickCol - 1 do
-            if objects.bricks[i][j] and
-               objects.bricks[i][j].fixture == otherFixture
-            then
+            local brick = objects.bricks[i][j]
+            
+            if brick and brick.fixture == otherFixture then
                if sound then music.explosion:play() end
-               score.increment(objects.bricks[i][j].hardness)
-               life.count = life.count + objects.bricks[i][j].life
                
-               breaks.insert({
-                     x      = objects.bricks[i][j].fixture:getBody():getX(),
-                     y      = objects.bricks[i][j].fixture:getBody():getY(),
+               score.increment(brick.hardness)
+               life.count = life.count + brick.life
+               
+               breaks.insert {
+                     x      = brick.fixture:getBody():getX(),
+                     y      = brick.fixture:getBody():getY(),
                      time   = 40,
-                     points = inc[objects.bricks[i][j].hardness]
-               })
+                     points = inc[brick.hardness]
+               }
 
-               if (objects.bricks[i][j].hardness == 0) then
-                  objects.bricks[i][j].body:destroy()
+               if brick.hardness == 0 then
+                  brick.body:destroy()
 
-                  if (objects.bricks[i][j].powerup == 1) then
+                  if (brick.powerup == 1) then
                      objects.paddle.shape = love.physics.newCircleShape(W / 5)
                      objects.paddle.fixture:getShape():setRadius(W / 5)
                      objects.paddle.timer = 500
                   end
 
-                  if (objects.bricks[i][j].nitro > 0) then
-                     objects.ball.nitro = objects.bricks[i][j].nitro
+                  if (brick.nitro > 0) then
+                     objects.ball.nitro = brick.nitro
                   end
 
                   numBricks = numBricks - 1
                   objects.bricks[i][j] = nil
                else
-                  objects.bricks[i][j].hardness = objects.bricks[i][j].hardness - 1;
+                  brick.hardness = brick.hardness - 1;
                end
             end
          end
@@ -572,20 +576,14 @@ function beginContact(a, b, coll)
 end
 
 function endContact(a, b, coll)
-   local ballFixture, otherFixture
-
-   if a == objects.ball.fixture then
-      ballFixture = a
-      otherFixture = b
-   elseif b == objects.ball.fixture then
-      ballFixture = b
-      otherFixture = a
-   end
+   local ballFixture, otherFixture = detectFixtures()
 
    if ballFixture and otherFixture then
       coll:setRestitution(1.0)
       otherFixture:getBody():setLinearVelocity(0, 0)
-      if otherFixture == objects.leftWall.fixture or otherFixture == objects.rightWall.fixture then
+      
+      if otherFixture == objects.leftWall.fixture
+      or otherFixture == objects.rightWall.fixture then
          local vx,vy = ballFixture:getBody():getLinearVelocity()
          if math.abs (vy) <= 0.15*W then
             ballFixture:getBody():setLinearVelocity(vx, (vy / math.abs(vy) * 0.15*W))
@@ -596,7 +594,7 @@ function endContact(a, b, coll)
       --    objects.paddle.body:setLinearVelocity(0, 0)
       -- end
 
-      local diag = math.sqrt (W*W + H*H)
+      local diag = math.sqrt(W*W + H*H)
       if objects.ball.nitro > 0 then limitBallVelocity(diag*1.3, diag*1.3)
       elseif mode == "easy" then limitBallVelocity(diag*0.372, diag*1.365)
       elseif mode == "medium" then limitBallVelocity(diag*0.496, diag*1.488)

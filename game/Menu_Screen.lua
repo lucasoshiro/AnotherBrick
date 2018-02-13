@@ -1,7 +1,7 @@
 Menu_Screen = {}
 local suitLib = require 'suit'
 local suit = nil
-local title = love.graphics.newText (ifFontLarge, "Another Brick")
+local title = love.graphics.newText(ifFontLarge, "Another Brick")
 
 local my = H/2 + H/17 + H/32
 local hy = H/2 + 2*(H/17 + H/32)
@@ -9,11 +9,10 @@ local hy = H/2 + 2*(H/17 + H/32)
 local music = nil
 local chk = nil
 
-function Menu_Screen.load (params)
-   --love.graphics.setBackgroundColor(30, 58, 94, 0)
+function Menu_Screen.load(params)
    love.graphics.setBackgroundColor(19, 25, 38, 0)
    music = {}
-   music.background = love.audio.newSource("Assets/sounds/midnight.mp3")
+   music.background = love.audio.newSource "Assets/sounds/midnight.mp3"
    music.background:setLooping(true)
    if sound then music.background:play() end
    music.background:setVolume(0.5)
@@ -21,11 +20,11 @@ function Menu_Screen.load (params)
    chk = {checked = sound, text = "Sounds"}
 end
 
-function Menu_Screen.back ()
+function Menu_Screen.back()
    love.event.quit ()
 end
 
-function Menu_Screen.draw ()
+function Menu_Screen.draw()
    love.graphics.setColor (150, 255, 230, 255)
    love.graphics.setFont(ifFontLarge)
 
@@ -35,7 +34,7 @@ function Menu_Screen.draw ()
    suit:draw()
 end
 
-function  Menu_Screen.update (dt)
+function  Menu_Screen.update(dt)
    if suit:Button("easy", W/6, H/2, (2*W)/3, H/17).hit then
       ScreenManager.changeTo("Game_Screen", "easy")
       return
