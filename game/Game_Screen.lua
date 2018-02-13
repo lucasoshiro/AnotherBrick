@@ -1,5 +1,3 @@
-Game_Screen = {}
-
 local suitLib = require 'suit'
 local suit = nil
 
@@ -68,6 +66,8 @@ life = {
 }
 
 --------------------------------------------------------------------------------
+--                              RANDOM FUNCTIONS                              --
+--------------------------------------------------------------------------------
 
 -- Devolve BrickCol + 1 posições que separam os tijolos em [0, W], sendo que o
 -- índice 1 é 0 e o último índice é W.
@@ -121,9 +121,11 @@ function randomPowerup()
    elseif k < 1/20                          then return 1
    end
    
-   return 0
+   return -1
 end
 
+--------------------------------------------------------------------------------
+--                               AUX FUNCTIONS                                --
 --------------------------------------------------------------------------------
 
 function detectFixtures(a, b)
@@ -132,6 +134,8 @@ function detectFixtures(a, b)
    end
 end
 
+--------------------------------------------------------------------------------
+--                               DRAW FUNCTIONS                               --
 --------------------------------------------------------------------------------
 
 function drawBricks()
@@ -217,6 +221,8 @@ function drawPaddle()
 end
 
 --------------------------------------------------------------------------------
+--                              UPDATE FUNCTIONS                              --
+--------------------------------------------------------------------------------
 
 function updateSuit()
    local btColor = {
@@ -281,6 +287,7 @@ end
 -- Limita a velocidade da bola entre minV e maxV. Para não limitar um desses
 -- valores, substitua-o por nil.
 function limitBallVelocity(minV, maxV)
+   print 'here'
    local vx, vy = objects.ball.fixture:getBody():getLinearVelocity()
    local v = math.sqrt(vx * vx + vy * vy)
 
@@ -293,6 +300,26 @@ function limitBallVelocity(minV, maxV)
    end
 end
 
+--------------------------------------------------------------------------------
+--                             END OF GAME EVENTS                             --
+--------------------------------------------------------------------------------
+function onGameOver()
+   ScreenManager.changeTo("Game_Over_Screen",
+                          {
+                             mode = mode,
+                             score = score.count,
+                             level = level,
+   })
+end
+
+function onWin()
+   level = level + 1
+   world:destroy()
+   initWorld()
+end
+
+--------------------------------------------------------------------------------
+--                              INIT FUNCTIONS                                --
 --------------------------------------------------------------------------------
 
 function initObjects()
@@ -348,10 +375,10 @@ function initBricks()
          objects.bricks[i][j] = {
             body     = love.physics.newBody(world, brickX, i*BrickH - BrickH/2),
             shape    = love.physics.newRectangleShape(brickW - 2, BrickH - 2),
-            powerup  = (powerupType == 1)  and 1   or 0,
-            life     = (powerupType == 2)  and 1   or 0,
-            nitro    = (powerupType == 3)  and 500 or 0,
-            hardness = (powerupType == -1) and 0   or randomHardness()
+            powerup  = (powerupType == 1) and 1   or 0,
+            life     = (powerupType == 2) and 1   or 0,
+            nitro    = (powerupType == 3) and 500 or 0,
+            hardness = (powerupType > 0)  and 0   or randomHardness()
          }
          
          objects.bricks[i][j].fixture =
@@ -378,128 +405,252 @@ function initWorld()
 end
 
 --------------------------------------------------------------------------------
+--                            COLLISION FUNCTIONS                             --
+--------------------------------------------------------------------------------
 
-function Game_Screen.load (params)
-   suit = suitLib.new()
-   love.physics.setMeter(64)
-   mode = params
-
-   gameTime = 0
-   score.count = 0
-   level = 1
-   gameIsPaused = false
-   life.count = 3
+function brickContact(i, j)
+   local brick = objects.bricks[i][j]
    
-   -- Music
-   music = {
-      background = love.audio.newSource "Assets/sounds/heart.mp3"
+   if sound then music.explosion:play() end
+   
+   score.increment(brick.hardness)
+   life.count = life.count + brick.life
+   
+   breaks.insert {
+      x      = brick.fixture:getBody():getX(),
+      y      = brick.fixture:getBody():getY(),
+      time   = 40,
+      points = inc[brick.hardness]
    }
 
-   music.background:setLooping(true)
-   if sound then music.background:play() end
-   music.background:setVolume(0.5)
+   if brick.hardness == 0 then
+      brick.body:destroy()
 
-   -- Bomb Sound
-   music.explosion = love.audio.newSource "Assets/sounds/puo.wav"
+      if (brick.powerup == 1) then
+         objects.paddle.shape = love.physics.newCircleShape(W / 5)
+         objects.paddle.fixture:getShape():setRadius(W / 5)
+         objects.paddle.timer = 500
+      end
 
-   borderWidth = 1
+      if (brick.nitro > 0) then
+         objects.ball.nitro = brick.nitro
+      end
 
-   initWorld()
-   love.graphics.setBackgroundColor(19, 25, 38, 0)
-   lastdt = 1
-end
-
-function Game_Screen.back()
-   ScreenManager.changeTo "Menu_Screen"
-end
-
-function Game_Screen.draw()
-   drawBricks()
-   drawLine()
-   drawBorders()
-   drawBall()
-   drawPaddle()
-   drawBreakScore()
-   
-   score.draw()
-   life.draw()
-   suit:draw()
-
-   if newLevel then
-      love.graphics.setColor(255, 255, 255, 255)
-      love.graphics.setFont(ifFontLarge)
-      love.graphics.printf("Level " .. level, 0, H/2, W, "center")
-      return
-   end
-
-   if gameIsPaused then
-      love.graphics.setColor(255, 255, 255, 255)
-      love.graphics.setFont(ifFontSmall)
-      love.graphics.printf("Paused", 0, H/2, W, "center")
+      numBricks = numBricks - 1
+      objects.bricks[i][j] = nil
+   else
+      brick.hardness = brick.hardness - 1;
    end
 end
 
-function Game_Screen.update (dt)
-   if objects.paddle.oldPos then
-      objects.paddle.fixture:getBody():setPosition(objects.paddle.oldPos.x,
-                                                   objects.paddle.oldPos.y)
-      objects.paddle.oldPos = nil
+--------------------------------------------------------------------------------
+--                            COLLISION CALLBACKS                             --
+--------------------------------------------------------------------------------
+
+function beginContact(a, b, coll)
+   local ballFixture, otherFixture = detectFixtures(a, b)
+
+   if ballFixture and otherFixture then
+      coll:setRestitution(1.0)
+      otherFixture:getBody():setLinearVelocity(0, 0)
+      love.system.vibrate(0.02)
+
+      for i = 2, BrickRow do
+         for j = 2, BrickCol - 1 do
+            local brick = objects.bricks[i][j]
+            
+            if brick and brick.fixture == otherFixture then
+               brickContact(i, j)
+            end
+         end
+      end
    end
 
-   updateSuit()
-
-   if gameIsPaused or newLevel then return end
-
-   lastdt = dt
-   gameTime = gameTime + dt
-   world:update(dt)
-
-   if #(love.touch.getTouches()) and #(love.touch.getTouches()) > 0 then
-      objects.paddle.fixture:getBody():setLinearVelocity(0, 0)
-   end
-
-   updatePaddlePowerups()
-
-   if numBricks == 0 then onWin() end
-
+   objects.paddle.oldPos = {
+      x = objects.paddle.fixture:getBody():getX(),
+      y = objects.paddle.fixture:getBody():getY()
+   }
 end
 
-function Game_Screen.touchpressed(id, x, y, dx, dy, pressure)
-   if newLevel then
-      newLevel = not newLevel
-      local px,py = objects.paddle.body:getPosition ()
-      objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
-   end
-   if gameIsPaused then return end
-   objects.paddle.body:setLinearVelocity(0, 0)
-   local paddleRadius = objects.paddle.shape:getRadius()
-   local paddleX, paddleY = objects.paddle.body:getPosition()
-   local k = 2
-   if x <= paddleX + k * paddleRadius and
-      x >= paddleX - k * paddleRadius and
-      y <= paddleY + k * paddleRadius and
-      y >= paddleY - k * paddleRadius
-   then
-      tid = id
+function endContact(a, b, coll)
+   local ballFixture, otherFixture = detectFixtures(a, b)
+
+   if ballFixture and otherFixture then
+      print 'ccccc'
+      coll:setRestitution(1.0)
+      otherFixture:getBody():setLinearVelocity(0, 0)
+      
+      if otherFixture == objects.leftWall.fixture
+      or otherFixture == objects.rightWall.fixture then
+         local vx,vy = ballFixture:getBody():getLinearVelocity()
+         if math.abs (vy) <= 0.15*W then
+            ballFixture:getBody():setLinearVelocity(vx, (vy / math.abs(vy) * 0.15*W))
+         end
+      end
+
+      print 'eeeee'
+
+      local diag = math.sqrt(W*W + H*H)
+      if objects.ball.nitro > 0 then limitBallVelocity(diag*1.3, diag*1.3)
+      elseif mode == "easy" then limitBallVelocity(diag*0.372, diag*1.365)
+      elseif mode == "medium" then limitBallVelocity(diag*0.496, diag*1.488)
+      else limitBallVelocity(diag*0.744, diag*1.861)
+      end
    end
 end
 
-function Game_Screen.mousepressed(x, y, button)
-   if newLevel then
-      newLevel = not newLevel
-      local px,py = objects.paddle.body:getPosition ()
-      objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
-   end
-   if gameIsPaused then return end
-   objects.paddle.body:setLinearVelocity(0, 0)
-   local paddleRadius = objects.paddle.shape:getRadius()
-   local paddleX, paddleY = objects.paddle.body:getPosition()
-   local k = 2
-end
+--------------------------------------------------------------------------------
+--                               LOVE CALLBACKS                               --
+--------------------------------------------------------------------------------
 
-function Game_Screen.touchmoved(id, x, y, dx, dy, pressure)
-   if gameIsPaused or newLevel then return end
-   if id == tid then
+Game_Screen = {
+   load = function(params)
+      suit = suitLib.new()
+      love.physics.setMeter(64)
+      mode = params
+
+      gameTime = 0
+      score.count = 0
+      level = 1
+      gameIsPaused = false
+      life.count = 3
+      
+      -- Music
+      music = {
+         background = love.audio.newSource "Assets/sounds/heart.mp3"
+      }
+
+      music.background:setLooping(true)
+      if sound then music.background:play() end
+      music.background:setVolume(0.5)
+
+      -- Bomb Sound
+      music.explosion = love.audio.newSource "Assets/sounds/puo.wav"
+
+      borderWidth = 1
+
+      initWorld()
+      love.graphics.setBackgroundColor(19, 25, 38, 0)
+      lastdt = 1
+   end,
+
+   back = function()
+      ScreenManager.changeTo "Menu_Screen"
+   end,
+
+   draw = function()
+      drawBricks()
+      drawLine()
+      drawBorders()
+      drawBall()
+      drawPaddle()
+      drawBreakScore()
+      
+      score.draw()
+      life.draw()
+      suit:draw()
+
+      if newLevel then
+         love.graphics.setColor(255, 255, 255, 255)
+         love.graphics.setFont(ifFontLarge)
+         love.graphics.printf("Level " .. level, 0, H/2, W, "center")
+         return
+      end
+
+      if gameIsPaused then
+         love.graphics.setColor(255, 255, 255, 255)
+         love.graphics.setFont(ifFontSmall)
+         love.graphics.printf("Paused", 0, H/2, W, "center")
+      end
+   end,
+
+   update = function(dt)
+      if objects.paddle.oldPos then
+         objects.paddle.fixture:getBody():setPosition(objects.paddle.oldPos.x,
+                                                      objects.paddle.oldPos.y)
+         objects.paddle.oldPos = nil
+      end
+
+      updateSuit()
+
+      if gameIsPaused or newLevel then return end
+
+      lastdt = dt
+      gameTime = gameTime + dt
+      world:update(dt)
+
+      if #(love.touch.getTouches()) and #(love.touch.getTouches()) > 0 then
+         objects.paddle.fixture:getBody():setLinearVelocity(0, 0)
+      end
+
+      updatePaddlePowerups()
+      updateLife()
+
+      if numBricks == 0 then onWin() end
+      
+      updateBreaks()
+   end,
+
+   touchpressed = function(id, x, y, dx, dy, pressure)
+      if newLevel then
+         newLevel = not newLevel
+         local px,py = objects.paddle.body:getPosition ()
+         objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
+      end
+      if gameIsPaused then return end
+      objects.paddle.body:setLinearVelocity(0, 0)
+      local paddleRadius = objects.paddle.shape:getRadius()
+      local paddleX, paddleY = objects.paddle.body:getPosition()
+      local k = 2
+      if x <= paddleX + k * paddleRadius and
+         x >= paddleX - k * paddleRadius and
+         y <= paddleY + k * paddleRadius and
+         y >= paddleY - k * paddleRadius
+      then
+         tid = id
+      end
+   end,
+
+   mousepressed = function(x, y, button)
+      if newLevel then
+         newLevel = not newLevel
+         local px,py = objects.paddle.body:getPosition ()
+         objects.ball.body:setLinearVelocity(px - W/3, py - H/2)
+      end
+      if gameIsPaused then return end
+      objects.paddle.body:setLinearVelocity(0, 0)
+      local paddleRadius = objects.paddle.shape:getRadius()
+      local paddleX, paddleY = objects.paddle.body:getPosition()
+      local k = 2
+   end,
+
+   touchmoved = function(id, x, y, dx, dy, pressure)
+      if gameIsPaused or newLevel then return end
+      if id == tid then
+         local ajustedx = false
+         local ajustedy = false
+         local paddleRadius = objects.paddle.shape:getRadius()
+
+         if y - paddleRadius <= (3*H)/5 then objects.paddle.body:setY((3*H)/5 + paddleRadius + 1); ajustedy = true
+         elseif y >= H - borderWidth - 1 then objects.paddle.body:setY(H - borderWidth - 1); ajustedy = true
+         elseif x <= borderWidth + 1 then objects.paddle.body:setX(borderWidth + 1); ajustedx = true
+         elseif x >= W - borderWidth - 1 then objects.paddle.body:setX(W - borderWidth - 1); ajustedx = true
+         end
+
+         if not (ajustedx and ajustedy) then
+            if ajustedx then objects.paddle.body:setY(y)
+            elseif ajustedy then objects.paddle.body:setX(x)
+            else objects.paddle.body:setPosition(x, y)
+            end
+         end
+         objects.paddle.body:setLinearVelocity(dx/lastdt, dy/lastdt)
+
+      else
+         objects.paddle.body:setLinearVelocity(0, 0)
+      end
+   end,
+
+   mousemoved = function(x, y, dx, dy, istouch)
       local ajustedx = false
       local ajustedy = false
       local paddleRadius = objects.paddle.shape:getRadius()
@@ -517,147 +668,25 @@ function Game_Screen.touchmoved(id, x, y, dx, dy, pressure)
          end
       end
       objects.paddle.body:setLinearVelocity(dx/lastdt, dy/lastdt)
+   end,
 
-   else
+   touchreleased = function(id, x, y, dx, dy, pressure)
       objects.paddle.body:setLinearVelocity(0, 0)
-   end
-end
+      if id == tid then tid = nil end
+   end,
 
-function Game_Screen.mousemoved(x, y, dx, dy, istouch)
-   local ajustedx = false
-   local ajustedy = false
-   local paddleRadius = objects.paddle.shape:getRadius()
+   finish = function()
+      music.background:stop()
+      music.explosion:stop()
+      music = nil
+      suit = nil
+      world:destroy()
+      world = nil
+   end,
 
-   if y - paddleRadius <= (3*H)/5 then objects.paddle.body:setY((3*H)/5 + paddleRadius + 1); ajustedy = true
-   elseif y >= H - borderWidth - 1 then objects.paddle.body:setY(H - borderWidth - 1); ajustedy = true
-   elseif x <= borderWidth + 1 then objects.paddle.body:setX(borderWidth + 1); ajustedx = true
-   elseif x >= W - borderWidth - 1 then objects.paddle.body:setX(W - borderWidth - 1); ajustedx = true
-   end
-
-   if not (ajustedx and ajustedy) then
-      if ajustedx then objects.paddle.body:setY(y)
-      elseif ajustedy then objects.paddle.body:setX(x)
-      else objects.paddle.body:setPosition(x, y)
-      end
-   end
-   objects.paddle.body:setLinearVelocity(dx/lastdt, dy/lastdt)
-end
-
-function Game_Screen.touchreleased(id, x, y, dx, dy, pressure)
-   objects.paddle.body:setLinearVelocity(0, 0)
-   if id == tid then tid = nil end
-end
-
-function beginContact(a, b, coll)
-   local ballFixture, otherFixture = detectFixtures(a, b)
-
-   if ballFixture and otherFixture then
-      coll:setRestitution(1.0)
-      otherFixture:getBody():setLinearVelocity(0, 0)
-      love.system.vibrate(0.02)
-
-      for i = 2, BrickRow do
-         for j = 2, BrickCol - 1 do
-            local brick = objects.bricks[i][j]
-            
-            if brick and brick.fixture == otherFixture then
-               if sound then music.explosion:play() end
-               
-               score.increment(brick.hardness)
-               life.count = life.count + brick.life
-               
-               breaks.insert {
-                     x      = brick.fixture:getBody():getX(),
-                     y      = brick.fixture:getBody():getY(),
-                     time   = 40,
-                     points = inc[brick.hardness]
-               }
-
-               if brick.hardness == 0 then
-                  brick.body:destroy()
-
-                  if (brick.powerup == 1) then
-                     objects.paddle.shape = love.physics.newCircleShape(W / 5)
-                     objects.paddle.fixture:getShape():setRadius(W / 5)
-                     objects.paddle.timer = 500
-                  end
-
-                  if (brick.nitro > 0) then
-                     objects.ball.nitro = brick.nitro
-                  end
-
-                  numBricks = numBricks - 1
-                  objects.bricks[i][j] = nil
-               else
-                  brick.hardness = brick.hardness - 1;
-               end
-            end
-         end
-      end
-   end
-
-   objects.paddle.oldPos = {
-      x = objects.paddle.fixture:getBody():getX(),
-      y = objects.paddle.fixture:getBody():getY()
-   }
-end
-
-function endContact(a, b, coll)
-   local ballFixture, otherFixture = detectFixtures()
-
-   if ballFixture and otherFixture then
-      coll:setRestitution(1.0)
-      otherFixture:getBody():setLinearVelocity(0, 0)
-      
-      if otherFixture == objects.leftWall.fixture
-      or otherFixture == objects.rightWall.fixture then
-         local vx,vy = ballFixture:getBody():getLinearVelocity()
-         if math.abs (vy) <= 0.15*W then
-            ballFixture:getBody():setLinearVelocity(vx, (vy / math.abs(vy) * 0.15*W))
-         end
-      end
-
-      -- if otherFixture == objects.paddle.fixture then
-      --    objects.paddle.body:setLinearVelocity(0, 0)
-      -- end
-
-      local diag = math.sqrt(W*W + H*H)
-      if objects.ball.nitro > 0 then limitBallVelocity(diag*1.3, diag*1.3)
-      elseif mode == "easy" then limitBallVelocity(diag*0.372, diag*1.365)
-      elseif mode == "medium" then limitBallVelocity(diag*0.496, diag*1.488)
-      else limitBallVelocity(diag*0.744, diag*1.861)
-      end
-   end
-end
-
-function Game_Screen.finish()
-   music.background:stop()
-   music.explosion:stop()
-   music = nil
-   suit = nil
-   world:destroy()
-   world = nil
-end
-
-function Game_Screen.focus (focus)
-   if not focus then gameIsPaused = true end
-end
-
--- Chamada quando a bolinha cai na borda inferior
-function onGameOver()
-   ScreenManager.changeTo("Game_Over_Screen",
-                          {
-                             mode = mode,
-                             score = score.count,
-                             level = level,
-   })
-end
-
--- Chamada quando não há mais tijolos
-function onWin()
-   level = level + 1
-   world:destroy()
-   initWorld()
-end
+   focus = function(focus)
+      if not focus then gameIsPaused = true end
+   end,
+}
 
 return Game_Screen
