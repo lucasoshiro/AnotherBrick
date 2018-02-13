@@ -37,7 +37,6 @@ Menu_Screen = {
       if playmusic then music.background:play() end
       music.background:setVolume(0.5)
       suit = suitLib.new()
-      -- chk = {checked = sound, text = "Sounds"}
    end,
 
    back = function()
@@ -55,20 +54,12 @@ Menu_Screen = {
    end,
 
    update = function(dt)
-      -- print()
-      -- setSizes()
       for mode, button in pairs(modeButtons) do
          if suit:Button(mode, buttonx, button.y, buttonw, buttonh).hit then
             ScreenManager.changeTo("Game_Screen", mode)
             return
          end
       end
-
-      -- if suit:Checkbox(chk, W/4, H - (2*H)/10, W/2, buttonh).hit then
-      --    sound = not sound
-      --    if sound then music.background:play ()
-      --    else music.background:pause () end
-      -- end
 
       if suit:Button("Options", buttonx, H - (2*H)/10, buttonw, buttonh).hit then
          ScreenManager.changeTo("Config_Screen")
@@ -79,7 +70,6 @@ Menu_Screen = {
          ScreenManager.changeTo("Credits_Screen")
          return
       end
-      
    end,
 
    finish = function()
