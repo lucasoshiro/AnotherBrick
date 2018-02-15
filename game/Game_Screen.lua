@@ -9,6 +9,17 @@ local hardnessColor = {
    {R = 96,  G = 136, B = 158},
    {R = 40,  G = 76,  B = 115}
 }
+
+local pauseButtons = {
+   resume = {y = 8 * H / 20,
+             txt = "Resume Game",
+             onclick = function() togglePause() end},
+   
+   menu   = {y = 12 * H / 20,
+             txt = "Return to menu",
+             onclick = function() ScreenManager.changeTo "Menu_Screen" end}
+}
+
 local hasCursor = love.mouse.hasCursor()
 
 local BrickH
@@ -196,7 +207,7 @@ function updateSuit()
                   },
                   W - W/8, H/30, 2*radi, 2*radi).hit then
       
-      if not newLevel then gameIsPaused = not gameIsPaused end
+      if not newLevel then togglePause() end
    end
 end
 
@@ -265,6 +276,10 @@ function limitBallVelocity(minV, maxV)
    end
 end
 
+function togglePause()
+   gameIsPaused = not gameIsPaused
+end
+
 --------------------------------------------------------------------------------
 --                             END OF GAME EVENTS                             --
 --------------------------------------------------------------------------------
@@ -298,6 +313,10 @@ function initVars()
    music      = nil
 
    BrickH = H/(BrickRow*3)
+
+   buttonh = H/17
+   buttonw = (2*W)/3
+   buttonx = W/6
    
    breaks = {
       elements = {},
@@ -578,7 +597,8 @@ Game_Screen = {
    end,
 
    back = function()
-      ScreenManager.changeTo "Menu_Screen"
+      togglePause()
+      -- ScreenManager.changeTo "Menu_Screen"
    end,
 
    draw = function()
@@ -603,7 +623,7 @@ Game_Screen = {
       if gameIsPaused then
          love.graphics.setColor(255, 255, 255, 255)
          love.graphics.setFont(ifFontSmall)
-         love.graphics.printf("Paused", 0, H/2, W, "center")
+         love.graphics.printf("Paused", 0, 4 * H / 20, W, "center")
       end
    end,
 
@@ -617,7 +637,16 @@ Game_Screen = {
       updateSuit()
       updateMouse()
 
-      if gameIsPaused or newLevel then return end
+      if newLevel then return end
+      
+      if gameIsPaused then
+         for _, button in pairs(pauseButtons) do
+            if suit:Button(button.txt, buttonx, button.y, buttonw, buttonh).hit then
+               button.onclick()
+            end
+         end
+         return
+      end
 
       lastdt = dt
       gameTime = gameTime + dt
