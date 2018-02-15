@@ -29,6 +29,10 @@ local screenSizeButtons = {
    -- fullscreen = {y = 17 * H/20}
 }
 
+local returnButton = {
+   y = 18 * H/20
+}
+
 local function setSizes()
    titley = H/20
 
@@ -72,6 +76,10 @@ Config_Screen = {
                setSizes()
             end
          end
+      end
+
+      if suit:Button(size, buttonx, returnButton.y, buttonw, buttonh).hit then
+         ScreenManager.changeTo "Menu_Screen"
       end
    end,
 }
