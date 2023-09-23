@@ -2,6 +2,8 @@
 
 local BASE = (...):match('(.-)[^%.]+$')
 
+local compat = require '../compat'
+
 local theme = {}
 theme.cornerRadius = 4
 
@@ -26,7 +28,7 @@ function theme.drawBox(x,y,w,h, colors, cornerRadius)
 		y,h = y - (cornerRadius - h), cornerRadius/2
 	end
 
-	love.graphics.setColor(colors.bg)
+	compat.setColor(colors.bg[1], colors.bg[2], colors.bg[3], 255)
 	love.graphics.rectangle('fill', x,y, w,h, cornerRadius)
 end
 
@@ -44,7 +46,7 @@ end
 function theme.Label(text, opt, x,y,w,h)
 	y = y + theme.getVerticalOffsetForAlign(opt.valign, opt.font, h)
 
-	love.graphics.setColor((opt.color and opt.color.normal or {}).fg or theme.color.normal.fg)
+	compat.setColor((opt.color and opt.color.normal or {}).fg or theme.color.normal.fg)
 	love.graphics.setFont(opt.font)
 	love.graphics.printf(text, x+2, y, w-4, opt.align or "center")
 end
@@ -53,7 +55,7 @@ function theme.Button(text, opt, x,y,w,h)
 	local c = theme.getColorForState(opt)
 
 	theme.drawBox(x,y,w,h, c, opt.cornerRadius)
-	love.graphics.setColor(c.fg)
+	compat.setColor(c.fg[1], c.fg[2], c.fg[3], 255)
 	love.graphics.setFont(opt.font)
 
 	y = y + theme.getVerticalOffsetForAlign(opt.valign, opt.font, h)
@@ -65,7 +67,7 @@ function theme.Checkbox(chk, opt, x,y,w,h)
 	local th = opt.font:getHeight()
 
 	theme.drawBox(x+h/10,y+h/10,h*.8,h*.8, c, opt.cornerRadius)
-	love.graphics.setColor(c.fg)
+	compat.setColor(c.fg)
 	if chk.checked then
 		love.graphics.setLineStyle('smooth')
 		love.graphics.setLineWidth(5)
@@ -96,7 +98,7 @@ function theme.Slider(fraction, opt, x,y,w,h)
 	theme.drawBox(xb,yb,wb,hb, {bg=c.fg}, opt.cornerRadius)
 
 	if opt.state ~= nil and opt.state ~= "normal" then
-		love.graphics.setColor((opt.color and opt.color.active or {}).fg or theme.color.active.fg)
+		compat.setColor((opt.color and opt.color.active or {}).fg or theme.color.active.fg)
 		if opt.vertical then
 			love.graphics.circle('fill', x+wb/2, yb, r)
 		else
@@ -119,7 +121,7 @@ function theme.Input(input, opt, x,y,w,h)
 	x = x - input.text_draw_offset
 
 	-- text
-	love.graphics.setColor((opt.color and opt.color.normal and opt.color.normal.fg) or theme.color.normal.fg)
+	compat.setColor((opt.color and opt.color.normal and opt.color.normal.fg) or theme.color.normal.fg)
 	love.graphics.setFont(opt.font)
 	love.graphics.print(input.text, x, y+(h-th)/2)
 

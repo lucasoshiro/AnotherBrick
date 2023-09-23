@@ -4,6 +4,8 @@ local title = love.graphics.newText(ifFontLarge, "Options")
 
 local titley, buttonh, buttonw, buttonx
 
+local compat = require 'compat'
+
 local soundCheckBoxes = {
    fx    = {checked = playfx,
             text = "Sound FX",
@@ -13,13 +15,13 @@ local soundCheckBoxes = {
             end
    },
    
-   music = {checked = playmusic,
-            text = "Music",
-            y = 7 * H/20,
-            onclick = function()
-               playmusic = not playmusic
-            end
-   }
+   -- music = {checked = playmusic,
+   --          text = "Music",
+   --          y = 7 * H/20,
+   --          onclick = function()
+   --             playmusic = not playmusic
+   --          end
+   -- }
 }
 
 local screenSizeButtons = {
@@ -44,7 +46,7 @@ end
 Config_Screen = {
    load = function(params)
       setSizes()
-      love.graphics.setBackgroundColor(19, 25, 38, 0)
+      compat.setBackgroundColor(19, 25, 38, 0)
       suit = suitLib.new()
    end,
    
@@ -53,7 +55,7 @@ Config_Screen = {
    end,
 
    draw = function()
-      love.graphics.setColor (150, 255, 230, 255)
+      compat.setColor (150, 255, 230, 255)
       love.graphics.setFont(ifFontLarge)
 
       love.graphics.draw (title, (W - title:getWidth())/2, titley)

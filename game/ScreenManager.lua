@@ -1,4 +1,5 @@
 local cur_screen = nil;
+local compat = require 'compat'
 
 love_methods = {
    'update',

@@ -2,6 +2,8 @@
 
 local BASE = (...):match('(.-)[^%.]+$')
 
+local compat = require '../compat'
+
 return function(core, normal, ...)
 	local opt, x,y = core.getOptionsAndSize(...)
 	opt.normal = normal or opt.normal or opt[1]
@@ -29,7 +31,7 @@ return function(core, normal, ...)
 	end
 
 	core:registerDraw(opt.draw or function(img,x,y, r,g,b,a)
-		love.graphics.setColor(r,g,b,a)
+		compat.setColor(r,g,b,a)
 		love.graphics.draw(img,x,y)
 	end, img, x,y, love.graphics.getColor())
 
