@@ -31,7 +31,7 @@ end
 Menu_Screen = {
    load = function(params)
       setSizes()
-      love.graphics.setBackgroundColor(19, 25, 38, 0)
+      compat.setBackgroundColor(19, 25, 38, 0)
       -- music = {}
       -- music.background = love.audio.newSource "Assets/sounds/midnight.mp3"
       -- music.background:setLooping(true)
@@ -45,7 +45,7 @@ Menu_Screen = {
    end,
 
    draw = function ()
-      love.graphics.setColor (150, 255, 230, 255)
+      compat.setColor (150, 255, 230, 255)
       love.graphics.setFont(ifFontLarge)
 
       love.graphics.draw (title, (W - title:getWidth())/2, titley)

@@ -114,14 +114,14 @@ function drawBricks()
          if (brick ~= nil) then
             local objHard = brick.hardness
             
-            love.graphics.setColor(hardnessColor[objHard].R,
+            compat.setColor(hardnessColor[objHard].R,
                                    hardnessColor[objHard].G,
                                    hardnessColor[objHard].B,
                                    255)
 
-            if brick.powerup == 1  then love.graphics.setColor(255, 0, 0, 255)
-            elseif brick.life == 1 then love.graphics.setColor(0, 255, 0, 255)
-            elseif brick.nitro > 0 then love.graphics.setColor(100 + math.sin(gameTime * 8) * 100,
+            if brick.powerup == 1  then compat.setColor(255, 0, 0, 255)
+            elseif brick.life == 1 then compat.setColor(0, 255, 0, 255)
+            elseif brick.nitro > 0 then compat.setColor(100 + math.sin(gameTime * 8) * 100,
                                                                235, 255, 255)
             end
 
@@ -133,7 +133,7 @@ function drawBricks()
 end
 
 function drawLine()
-   love.graphics.setColor(166, 167, 170, 100)
+   compat.setColor(166, 167, 170, 100)
    local a = 0
    local b = 8
    local dist = 8
@@ -148,13 +148,13 @@ end
 function drawBreakScore()
    for i, brk in ipairs(breaks.elements) do
       love.graphics.setFont(ifFontTiny)
-      love.graphics.setColor(252, 210, 9, brk.time * 6)
+      compat.setColor(252, 210, 9, brk.time * 6)
       love.graphics.print('+' .. brk.points, brk.x, brk.y - 40 + brk.time)
    end
 end
 
 function drawBorders()
-   love.graphics.setColor(72, 160, 14, 0)
+   compat.setColor(72, 160, 14, 0)
 
    for i, border in ipairs({ceil, leftWall, rightWall}) do
       love.graphics.polygon("fill",
@@ -165,7 +165,7 @@ function drawBorders()
 end
 
 function drawBall()
-   love.graphics.setColor((1 - objects.ball.nitro / 500) * 119
+   compat.setColor((1 - objects.ball.nitro / 500) * 119
          + (objects.ball.nitro / 500) * (100 + math.sin(gameTime * 8) * 100),
       170 + 65 * objects.ball.nitro / 500,
       112 + 143 * objects.ball.nitro / 500,
@@ -178,9 +178,10 @@ function drawBall()
 end
 
 function drawPaddle()
-   love.graphics.setColor(objects.paddle.timer / 500 * 49 + 206,
+   compat.setColor(objects.paddle.timer / 500 * 49 + 206,
                           (1 - objects.paddle.timer / 500) * 206,
-                          (1 - objects.paddle.timer / 500) * 206)
+                          (1 - objects.paddle.timer / 500) * 206,
+   255)
    
    love.graphics.circle("fill",
                         objects.paddle.body:getX(),
@@ -335,7 +336,7 @@ function initVars()
    score = {
       count = 0,
       draw = function()
-         love.graphics.setColor(252, 210, 9)
+         compat.setColor(252, 210, 9)
          love.graphics.setFont(ifFontSmall)
          love.graphics.print('Score', H/200 + W/22, H/200)
          love.graphics.print(score.count, H/200 + W/22, H/200 + W/11)
@@ -349,9 +350,9 @@ function initVars()
    life = {
       count = 3,
       draw = function()
-         love.graphics.setColor(119, 170, 112)
+         compat.setColor(119, 170, 112)
          for i = 1, life.count do
-            love.graphics.setColor(255, 255, 255, 255)
+            compat.setColor(255, 255, 255, 255)
             love.graphics.draw(heartPic,
                                H/200 + i * W/22,
                                H / 200 + W / 200 + 5 * W/22,
@@ -593,7 +594,7 @@ Game_Screen = {
       borderWidth = 1
 
       initWorld()
-      love.graphics.setBackgroundColor(19, 25, 38, 0)
+      compat.setBackgroundColor(19, 25, 38, 0)
       lastdt = 1
    end,
 
@@ -615,14 +616,14 @@ Game_Screen = {
       suit:draw()
 
       if newLevel then
-         love.graphics.setColor(255, 255, 255, 255)
+         compat.setColor(255, 255, 255, 255)
          love.graphics.setFont(ifFontLarge)
          love.graphics.printf("Level " .. level, 0, H/2, W, "center")
          return
       end
 
       if gameIsPaused then
-         love.graphics.setColor(255, 255, 255, 255)
+         compat.setColor(255, 255, 255, 255)
          love.graphics.setFont(ifFontSmall)
          love.graphics.printf("Paused", 0, 4 * H / 20, W, "center")
       end

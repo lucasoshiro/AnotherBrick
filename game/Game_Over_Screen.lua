@@ -5,12 +5,12 @@ local compat = require 'compat'
 Game_Over_Screen = {
    load = function(params)
       gameStats = params
-      love.graphics.setBackgroundColor(19, 25, 38, 0)
+      compat.setBackgroundColor(19, 25, 38, 0)
       suit = suitLib.new()
    end,
 
    draw = function()
-      love.graphics.setColor(255, 255, 255, 255)
+      compat.setColor(255, 255, 255, 255)
       love.graphics.setFont(ifFontLarge)
       love.graphics.printf("Game Over!", 0, H/2 - H/3, W, "center")
       love.graphics.setFont(ifFontSmall)
