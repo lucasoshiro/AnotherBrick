@@ -310,7 +310,7 @@ function initVars()
    mode       = nil
    level      = nil
    newLevel   = nil
-   music      = nil
+   -- music      = nil
 
    BrickH = H/(BrickRow*3)
 
@@ -449,7 +449,7 @@ end
 function brickContact(i, j)
    local brick = objects.bricks[i][j]
    
-   if playfx then music.explosion:play() end
+   -- if playfx then music.explosion:play() end
    
    score.increment(brick.hardness)
    life.count = life.count + brick.life
@@ -578,16 +578,16 @@ Game_Screen = {
       life.count = 3
       
       -- Music
-      music = {
-         background = love.audio.newSource "Assets/sounds/heart.mp3"
-      }
+      -- music = {
+      --    background = love.audio.newSource "Assets/sounds/heart.mp3"
+      -- }
 
-      music.background:setLooping(true)
-      if playmusic then music.background:play() end
-      music.background:setVolume(0.5)
+      -- music.background:setLooping(true)
+      -- if playmusic then music.background:play() end
+      -- music.background:setVolume(0.5)
 
       -- Bomb Sound
-      music.explosion = love.audio.newSource "Assets/sounds/puo.wav"
+      -- music.explosion = love.audio.newSource "Assets/sounds/puo.wav"
 
       borderWidth = 1
 
@@ -712,9 +712,9 @@ Game_Screen = {
    end,
 
    finish = function()
-      music.background:stop()
-      music.explosion:stop()
-      music = nil
+      -- music.background:stop()
+      -- music.explosion:stop()
+      -- music = nil
       suit = nil
       world:destroy()
       world = nil

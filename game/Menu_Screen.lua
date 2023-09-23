@@ -2,7 +2,7 @@ local suitLib = require 'suit'
 local suit = nil
 local title = love.graphics.newText(ifFontLarge, "Another Brick")
 
-local music = nil
+-- local music = nil
 local chk = nil
 
 local titley, ey, my, hy, iy, buttonh, buttonw, buttonx
@@ -31,11 +31,11 @@ Menu_Screen = {
    load = function(params)
       setSizes()
       love.graphics.setBackgroundColor(19, 25, 38, 0)
-      music = {}
-      music.background = love.audio.newSource "Assets/sounds/midnight.mp3"
-      music.background:setLooping(true)
-      if playmusic then music.background:play() end
-      music.background:setVolume(0.5)
+      -- music = {}
+      -- music.background = love.audio.newSource "Assets/sounds/midnight.mp3"
+      -- music.background:setLooping(true)
+      -- if playmusic then music.background:play() end
+      -- music.background:setVolume(0.5)
       suit = suitLib.new()
    end,
 
@@ -73,8 +73,8 @@ Menu_Screen = {
    end,
 
    finish = function()
-      music.background:stop ()
-      music = nil
+      -- music.background:stop ()
+      -- music = nil
       suit = nil
    end
 }

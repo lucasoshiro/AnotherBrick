@@ -13,13 +13,13 @@ local soundCheckBoxes = {
             end
    },
    
-   music = {checked = playmusic,
-            text = "Music",
-            y = 7 * H/20,
-            onclick = function()
-               playmusic = not playmusic
-            end
-   }
+   -- music = {checked = playmusic,
+   --          text = "Music",
+   --          y = 7 * H/20,
+   --          onclick = function()
+   --             playmusic = not playmusic
+   --          end
+   -- }
 }
 
 local screenSizeButtons = {
