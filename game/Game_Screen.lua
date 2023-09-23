@@ -20,7 +20,7 @@ local pauseButtons = {
              onclick = function() ScreenManager.changeTo "Menu_Screen" end}
 }
 
-local hasCursor = love.mouse.hasCursor()
+local hasCursor = love.mouse.isCursorSupported()
 
 local BrickH
 local suit, tid, mouseMoved, mode, level, newLevel, music, numBricks
