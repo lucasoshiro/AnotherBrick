@@ -31,6 +31,10 @@ ScreenManager = {
       for i, method in ipairs(love_methods) do
          if cur_screen[method] then
             love[method] = cur_screen[method]
+         else
+            print(name, method)
+
+            love[method] = function() end
          end
       end
 
