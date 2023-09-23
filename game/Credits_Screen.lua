@@ -1,4 +1,5 @@
 local title = love.graphics.newText(ifFontLarge, "Another Brick")
+local compat = require 'compat'
 local credits = [[
 All in all it's just another brick breaker :)
 

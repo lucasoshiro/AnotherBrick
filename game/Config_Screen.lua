@@ -4,6 +4,8 @@ local title = love.graphics.newText(ifFontLarge, "Options")
 
 local titley, buttonh, buttonw, buttonx
 
+local compat = require 'compat'
+
 local soundCheckBoxes = {
    fx    = {checked = playfx,
             text = "Sound FX",

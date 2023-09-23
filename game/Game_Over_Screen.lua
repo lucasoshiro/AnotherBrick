@@ -1,5 +1,6 @@
 local suitLib = require 'suit'
 local gameStats = nil
+local compat = require 'compat'
 
 Game_Over_Screen = {
    load = function(params)

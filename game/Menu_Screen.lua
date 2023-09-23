@@ -1,6 +1,7 @@
 local suitLib = require 'suit'
 local suit = nil
 local title = love.graphics.newText(ifFontLarge, "Another Brick")
+local compat = require 'compat'
 
 -- local music = nil
 local chk = nil

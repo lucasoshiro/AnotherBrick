@@ -1,4 +1,5 @@
 local suitLib = require 'suit'
+local compat = require 'compat'
 
 local BrickCol = 10
 local BrickRow = 9
